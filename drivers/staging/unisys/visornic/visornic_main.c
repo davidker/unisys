@@ -1813,11 +1813,15 @@ static int visornic_probe(struct visor_device *dev)
 		goto cleanup_xmit_cmdrsp;
 	}
 
-	/* Note: Interrupts have to be enable before the while
-	 * loop below because the napi routine is responsible for
+	/* Let's start our threads to get responses */
+	netif_napi_add(netdev, &devdata->napi, visornic_poll, NAPI_WEIGHT);
+
+	/*
+	 * Note: Interrupts have to be enabled before we register
+	 * because the napi routine is responsible for
 	 * setting enab_dis_acked
 	 */
-	netif_napi_add(netdev, &devdata->napi, visornic_poll, NAPI_WEIGHT);
+	visorbus_register_for_channel_interrupts(dev, IOCHAN_FROM_IOPART);
 	visorbus_enable_channel_interrupts(dev);
 
 	err = register_netdev(netdev);
