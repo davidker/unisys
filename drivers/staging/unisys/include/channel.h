@@ -93,7 +93,10 @@ enum channel_clientstate {
  * channels should be defined here.  The io channel feature bits are
  * defined right here
  */
+#define ULTRA_IO_DRIVER_ENABLES_INTS (0x1ULL << 1)
 #define ULTRA_IO_CHANNEL_IS_POLLING (0x1ULL << 3)
+#define ULTRA_IO_IOVM_IS_OK_WITH_DRIVER_DISABLING_INTS (0x1ULL << 4)
+#define ULTRA_IO_DRIVER_DISABLES_INTS (0x1ULL << 5)
 #define ULTRA_IO_DRIVER_SUPPORTS_ENHANCED_RCVBUF_CHECKING (0x1ULL << 6)
 
 /* Common Channel Header */
@@ -143,6 +146,8 @@ struct channel_header {
 	/* Please add all new single-byte values below here */
 	u8 recover_channel;
 } __packed;
+
+#define ULTRA_CHANNEL_ENABLE_INTS (0x1ULL << 0)
 
 /* Subheader for the Signal Type variation of the Common Channel */
 struct signal_queue_header {
