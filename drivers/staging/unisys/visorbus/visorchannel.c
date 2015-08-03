@@ -21,6 +21,7 @@
 
 #include <linux/uuid.h>
 #include <linux/io.h>
+#include <linux/llist.h>
 
 #include "visorbus.h"
 #include "visorbus_private.h"
