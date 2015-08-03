@@ -1094,6 +1094,11 @@ static int visorhba_probe(struct visor_device *dev)
 	tasklet_init(&devdata->tasklet, process_incoming_rsps,
 		     (unsigned long)devdata);
 
+	/*
+	 * I want to use real interrupts if available so need to
+	 * register
+	 */
+	visorbus_register_for_channel_interrupts(dev, IOCHAN_FROM_IOPART);
 	visorbus_enable_channel_interrupts(dev);
 
 	scsi_scan_host(scsihost);

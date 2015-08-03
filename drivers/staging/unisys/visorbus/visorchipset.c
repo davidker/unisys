@@ -808,6 +808,10 @@ device_epilog(struct visor_device *dev_info,
 				 */
 				chipset_device_pause(dev_info);
 			}
+			if ((dev_info->gsi_vector > 0) &&
+			    (dev_info->irq > 0)) {
+				acpi_unregister_gsi(dev_info->gsi_vector);
+			}
 			break;
 		case CONTROLVM_DEVICE_DESTROY:
 			chipset_device_destroy(dev_info);
@@ -982,12 +986,25 @@ my_device_create(struct controlvm_message *inmsg)
 		goto out_respond;
 	}
 
+	dev_info->device.parent = &bus_info->device;
+
 	dev_info->chipset_bus_no = bus_no;
 	dev_info->chipset_dev_no = dev_no;
 	dev_info->inst = cmd->create_device.dev_inst_uuid;
 
-	/* not sure where the best place to set the 'parent' */
-	dev_info->device.parent = &bus_info->device;
+	dev_info->gsi_vector = cmd->create_device.intr.recv_irq_handle;
+	if (dev_info->gsi_vector > 0) {
+		dev_info->irq = acpi_register_gsi(&dev_info->device,
+						  dev_info->gsi_vector,
+						  ACPI_LEVEL_SENSITIVE,
+						  ACPI_ACTIVE_LOW);
+		if (dev_info->irq < 0) {
+			dev_err(&dev_info->device,
+				"Error registering gsi number: %d (%d)",
+				dev_info->gsi_vector, dev_info->irq);
+			dev_info->irq = 0;
+		}
+	}
 
 	visorbus_log_postcode(CURRENT_FILE_PC, DEVICE_CREATE_ENTRY_PC,
 			      __LINE__, dev_no, bus_no, DIAG_SEVERITY_PRINT);
@@ -999,6 +1016,8 @@ my_device_create(struct controlvm_message *inmsg)
 					     cmd->create_device.data_type_uuid);
 
 	if (!visorchannel) {
+		if ((dev_info->gsi_vector > 0) && (dev_info->irq > 0))
+			acpi_unregister_gsi(dev_info->gsi_vector);
 		visorbus_log_postcode(CURRENT_FILE_PC, DEVICE_CREATE_FAILURE_PC,
 				      __LINE__, dev_no, bus_no,
 				      DIAG_SEVERITY_ERR);

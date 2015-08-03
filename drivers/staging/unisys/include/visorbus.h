@@ -172,6 +172,12 @@ struct visor_device {
 	struct controlvm_message_header *pending_msg_hdr;
 	void *vbus_hdr_info;
 	uuid_le partition_uuid;
+	int recv_queue; /* specifies which queue to receive msgs on */
+	int irq;
+	u32 gsi_vector;
+	int wait_ms;
+	bool irq_mode_desired;
+	bool request_irq_done;
 };
 
 #define to_visor_device(x) container_of(x, struct visor_device, device)
@@ -187,6 +193,8 @@ int visorbus_write_channel(struct visor_device *dev,
 void visorbus_enable_channel_interrupts(struct visor_device *dev);
 void visorbus_disable_channel_interrupts(struct visor_device *dev);
 void visorbus_rearm_channel_interrupts(struct visor_device *dev);
+int visorbus_register_for_channel_interrupts(struct visor_device *dev,
+					     u32 queue);
 
 /* Levels of severity for diagnostic events, in order from lowest severity to
  * highest (i.e. fatal errors are the most severe, and should always be logged,
