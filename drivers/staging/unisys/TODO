@@ -1,8 +1,6 @@
 TODO:
 	- enhance visornic to use channel_interrupt() hook instead of a
 	  kernel thread
-	- enhance visorhba to use channel_interrupt() hook instead of a
-	  kernel thread
 	- teach visorbus to handle virtual interrupts triggered by s-Par
 	  back-end, and call function driver's channel_interrupt() function
 	  when they occur
