@@ -5,8 +5,8 @@
  */
 
 #include <linux/debugfs.h>
-#include <linux/kthread.h>
 #include <linux/idr.h>
+#include <linux/interrupt.h>
 #include <linux/module.h>
 #include <linux/seq_file.h>
 #include <linux/visorbus.h>
@@ -30,7 +30,6 @@ static struct visor_channeltype_descriptor visorhba_channel_types[] = {
 	  VISOR_VHBA_CHANNEL_VERSIONID },
 	{}
 };
-
 MODULE_DEVICE_TABLE(visorbus, visorhba_channel_types);
 MODULE_ALIAS("visorbus:" VISOR_VHBA_CHANNEL_GUID_STR);
 
@@ -77,10 +76,7 @@ struct visorhba_devdata {
 	struct visordisk_info head;
 	unsigned int max_buff_len;
 	int devnum;
-	struct task_struct *thread;
-	int thread_wait_ms;
 	atomic_t busy_count;
-
 	/*
 	 * allows us to pass int handles back-and-forth between us and
 	 * iovm, instead of raw pointers
@@ -89,44 +85,27 @@ struct visorhba_devdata {
 
 	struct dentry *debugfs_dir;
 	struct dentry *debugfs_info;
+	struct tasklet_struct tasklet;
 };
+
+/**	visorhba_isr - function to handle interrupts from visorbus
+ *	@dev: device that received interrupt, could be shared
+ *
+ *	Interrupts from visorbus are processed here. Since the IOVM
+ *	sends us "real" interrupts, we are interrupt context here, so
+ *	we need to schedule the work (if any). Note: Interrupts might
+ *	be shared between devices.
+ */
+static void visorhba_isr(struct visor_device *dev)
+{
+	struct visorhba_devdata *devdata = dev_get_drvdata(&dev->device);
+
+	tasklet_schedule(&devdata->tasklet);
+}
 
 struct visorhba_devices_open {
 	struct visorhba_devdata *devdata;
 };
-
-/*
- * visor_thread_start - Starts a thread for the device
- * @threadfn:   Function the thread starts
- * @thrcontext: Context to pass to the thread, i.e. devdata
- * @name:	String describing name of thread
- *
- * Starts a thread for the device.
- *
- * Return: The task_struct * denoting the thread on success,
- *	   or NULL on failure
- */
-static struct task_struct *visor_thread_start(int (*threadfn)(void *),
-					      void *thrcontext, char *name)
-{
-	struct task_struct *task;
-
-	task = kthread_run(threadfn, thrcontext, "%s", name);
-	if (IS_ERR(task)) {
-		pr_err("visorbus failed to start thread\n");
-		return NULL;
-	}
-	return task;
-}
-
-/*
- * visor_thread_stop - Stops the thread if it is running
- * @task: Description of process to stop
- */
-static void visor_thread_stop(struct task_struct *task)
-{
-	kthread_stop(task);
-}
 
 /*
  * add_scsipending_entry - Save off io command that is pending in
@@ -733,10 +712,11 @@ static void visorhba_serverdown_complete(struct visorhba_devdata *devdata)
 	struct uiscmdrsp *cmdrsp;
 	unsigned long flags;
 
+	visorbus_disable_channel_interrupts(devdata->dev);
 	/* Stop using the IOVM response queue (queue should be drained
 	 * by the end)
 	 */
-	visor_thread_stop(devdata->thread);
+	tasklet_disable(&devdata->tasklet);
 
 	/* Fail commands that weren't completed */
 	spin_lock_irqsave(&devdata->privlock, flags);
@@ -956,28 +936,20 @@ static void drain_queue(struct uiscmdrsp *cmdrsp,
  *
  * Return: 0 on success, -ENOMEM on failure
  */
-static int process_incoming_rsps(void *v)
+static void process_incoming_rsps(unsigned long v)
 {
-	struct visorhba_devdata *devdata = v;
+	struct visorhba_devdata *devdata = (struct visorhba_devdata *)v;
 	struct uiscmdrsp *cmdrsp = NULL;
 	const int size = sizeof(*cmdrsp);
 
 	cmdrsp = kmalloc(size, GFP_ATOMIC);
 	if (!cmdrsp)
-		return -ENOMEM;
+		return;
 
-	while (1) {
-		if (kthread_should_stop())
-			break;
-		wait_event_interruptible_timeout(
-			devdata->rsp_queue, (atomic_read(
-					     &devdata->interrupt_rcvd) == 1),
-				msecs_to_jiffies(devdata->thread_wait_ms));
-		/* drain queue */
-		drain_queue(cmdrsp, devdata);
-	}
+	/* drain queue */
+	drain_queue(cmdrsp, devdata);
+
 	kfree(cmdrsp);
-	return 0;
 }
 
 /*
@@ -1023,8 +995,9 @@ static int visorhba_resume(struct visor_device *dev,
 	if (devdata->serverdown && !devdata->serverchangingstate)
 		devdata->serverchangingstate = true;
 
-	devdata->thread = visor_thread_start(process_incoming_rsps, devdata,
-					     "vhba_incming");
+	tasklet_enable(&devdata->tasklet);
+	visorbus_enable_channel_interrupts(dev);
+
 	devdata->serverdown = false;
 	devdata->serverchangingstate = false;
 
@@ -1107,10 +1080,10 @@ static int visorhba_probe(struct visor_device *dev)
 		goto err_debugfs_info;
 
 	idr_init(&devdata->idr);
+	tasklet_init(&devdata->tasklet, process_incoming_rsps,
+		     (unsigned long)devdata);
 
-	devdata->thread_wait_ms = 2;
-	devdata->thread = visor_thread_start(process_incoming_rsps, devdata,
-					     "vhba_incoming");
+	visorbus_enable_channel_interrupts(dev);
 
 	scsi_scan_host(scsihost);
 
@@ -1145,7 +1118,8 @@ static void visorhba_remove(struct visor_device *dev)
 		return;
 
 	scsihost = devdata->scsihost;
-	visor_thread_stop(devdata->thread);
+	visorbus_disable_channel_interrupts(dev);
+	tasklet_kill(&devdata->tasklet);
 	scsi_remove_host(scsihost);
 	scsi_host_put(scsihost);
 
@@ -1168,7 +1142,7 @@ static struct visor_driver visorhba_driver = {
 	.remove = visorhba_remove,
 	.pause = visorhba_pause,
 	.resume = visorhba_resume,
-	.channel_interrupt = NULL,
+	.channel_interrupt = visorhba_isr,
 };
 
 /*
