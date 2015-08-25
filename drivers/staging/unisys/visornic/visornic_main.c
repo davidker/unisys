@@ -1769,7 +1769,6 @@ static int visornic_probe(struct visor_device *dev)
 			__func__, err);
 		goto cleanup_xmit_cmdrsp;
 	}
-	features |= VISOR_CHANNEL_IS_POLLING;
 	features |= VISOR_DRIVER_ENHANCED_RCVBUF_CHECKING;
 	err = visorbus_write_channel(dev, channel_offset, &features, 8);
 	if (err) {
