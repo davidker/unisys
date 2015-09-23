@@ -659,6 +659,61 @@ visorbus_disable_channel_interrupts(struct visor_device *dev)
 }
 EXPORT_SYMBOL_GPL(visorbus_disable_channel_interrupts);
 
+int visorbus_set_channel_features(struct visor_device *dev, u64 feature_bits)
+{
+	int channel_offset = 0, err = 0;
+	u64 features;
+
+	channel_offset = offsetof(struct channel_header,
+				  features);
+	err = visorbus_read_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+
+	features |= (feature_bits);
+
+	err = visorbus_write_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+	return err;
+}
+
+int visorbus_clear_channel_features(struct visor_device *dev, u64 feature_bits)
+{
+	int channel_offset = 0, err = 0;
+	u64 features, mask;
+
+	channel_offset = offsetof(struct channel_header,
+				  features);
+	err = visorbus_read_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+
+	mask = ~(feature_bits);
+	features &= mask;
+
+	err = visorbus_write_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+	return err;
+}
+
 /**
  * visorbus_log_postcode() - logs a 64-bit value comprised of the inputs
  *                           to the Unisys hypervisor log file
