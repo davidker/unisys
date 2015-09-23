@@ -256,6 +256,10 @@ bool visorchannel_signalinsert(struct visorchannel *channel, u32 queue,
 			       void *msg);
 bool visorchannel_signalempty(struct visorchannel *channel, u32 queue);
 uuid_le visorchannel_get_uuid(struct visorchannel *channel);
+void visorchannel_set_sig_features(struct visorchannel *channel, u32 queue,
+				   u64 features);
+void visorchannel_clear_sig_features(struct visorchannel *channel, u32 queue,
+				     u64 features);
 
 #define BUS_ROOT_DEVICE		UINT_MAX
 struct visor_device *visorbus_get_device_by_id(u32 bus_no, u32 dev_no,

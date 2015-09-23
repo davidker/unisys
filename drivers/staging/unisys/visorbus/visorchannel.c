@@ -507,3 +507,49 @@ visorchannel_signalinsert(struct visorchannel *channel, u32 queue, void *msg)
 	return rc;
 }
 EXPORT_SYMBOL_GPL(visorchannel_signalinsert);
+
+/**
+ *	visorchannel_clear_or_set_sig_features
+ *
+ *	Clear or set bits within the 64-bit features word for the
+ *	specified channel and queue.
+ *	@channel: the channel to modify features for.
+ *	@queue: the queue number to modify features for.
+ *	@features: a mask of feature bits usage based on is_set flag;
+ *	@is_set: if is_set is true, 1 bits indicate which features bits
+ *		 you want to set within the feature word;
+ *		 if is_set is false, 1 bits indicate which feature bits
+ *		 you want to clear within the features word
+ */
+void
+visorchannel_clear_or_set_sig_features(struct visorchannel *channel,
+				       u32 queue, u64 features, bool is_set)
+{
+	struct signal_queue_header sig_hdr;
+
+	if (!sig_read_header(channel, queue, &sig_hdr))
+		return;
+	sig_hdr.features = (is_set) ? sig_hdr.features | features :
+			   sig_hdr.features & !features;
+	if (!SIG_WRITE_FIELD(channel, queue, &sig_hdr, features))
+		return;
+	wmb(); /* required to sync channel with IOSP */
+}
+
+void
+visorchannel_clear_sig_features(struct visorchannel *channel, u32 queue,
+				u64 features)
+{
+	visorchannel_clear_or_set_sig_features(channel, queue, features,
+					       false);
+}
+EXPORT_SYMBOL_GPL(visorchannel_clear_sig_features);
+
+void
+visorchannel_set_sig_features(struct visorchannel *channel, u32 queue,
+			      u64 features)
+{
+	visorchannel_clear_or_set_sig_features(channel, queue, features,
+					       true);
+}
+EXPORT_SYMBOL_GPL(visorchannel_set_sig_features);
