@@ -17,7 +17,7 @@ static const guid_t visor_vbus_channel_guid = VISOR_VBUS_CHANNEL_GUID;
 
 /* Display string that is guaranteed to be no longer the 99 characters */
 #define LINESIZE 99
-#define POLLJIFFIES_NORMALCHANNEL 10
+#define POLLJIFFIES_NORMALCHANNEL msecs_to_jiffies(2)
 
 /* stores whether bus_registration was successful */
 static bool initialized;
