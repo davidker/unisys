@@ -46,8 +46,39 @@
 #define SPAR_MOUSE_CHANNEL_PROTOCOL_UUID_STR \
 	"addf07d4-94a9-46e2-81c3-61abcdbdbd87"
 
-#define PIXELS_ACROSS_DEFAULT	800
-#define PIXELS_DOWN_DEFAULT	600
+/* header of keyboard/mouse channels */
+struct spar_input_channel_protocol {
+	struct channel_header channel_header;
+	u32 n_input_reports;
+	union {
+		struct {
+			u16 x_resolution;
+			u16 y_resolution;
+		} mouse;
+		struct {
+			u32 flags;
+		} keyboard;
+	};
+} __packed;
+
+#define sizeofmemb(TYPE, MEMBER) sizeof(((TYPE *)0)->MEMBER)
+
+static unsigned int read_input_channel_uint(struct visor_device *dev,
+					    unsigned int offset,
+					    unsigned int size)
+{
+	unsigned int v = 0;
+
+	if (visorbus_read_channel(dev, offset, &v, size)) {
+		dev_warn(&dev->device,
+			 "failed to read channel int at offset %u\n", offset);
+		return 0;
+	}
+	return v;
+}
+
+#define PIXELS_ACROSS_DEFAULT	1024
+#define PIXELS_DOWN_DEFAULT	768
 #define KEYCODE_TABLE_BYTES	256
 
 enum visorinput_device_type {
@@ -323,11 +354,10 @@ setup_client_keyboard(void *devdata,  /* opaque on purpose */
 }
 
 static struct input_dev *
-setup_client_mouse(void *devdata /* opaque on purpose */)
+setup_client_mouse(void *devdata /* opaque on purpose */,
+		   unsigned int xres, unsigned int yres)
 {
 	struct input_dev *visorinput_dev = NULL;
-	int xres, yres;
-	struct fb_info *fb0;
 
 	visorinput_dev = input_allocate_device();
 	if (!visorinput_dev)
@@ -345,14 +375,10 @@ setup_client_mouse(void *devdata /* opaque on purpose */)
 	set_bit(BTN_RIGHT, visorinput_dev->keybit);
 	set_bit(BTN_MIDDLE, visorinput_dev->keybit);
 
-	if (registered_fb[0]) {
-		fb0 = registered_fb[0];
-		xres = fb0->var.xres_virtual;
-		yres = fb0->var.yres_virtual;
-	} else {
+	if (xres == 0)
 		xres = PIXELS_ACROSS_DEFAULT;
+	if (yres == 0)
 		yres = PIXELS_DOWN_DEFAULT;
-	}
 	input_set_abs_params(visorinput_dev, ABS_X, 0, xres, 0, 0);
 	input_set_abs_params(visorinput_dev, ABS_Y, 0, yres, 0, 0);
 
@@ -369,6 +395,7 @@ devdata_create(struct visor_device *dev, enum visorinput_device_type devtype)
 {
 	struct visorinput_devdata *devdata = NULL;
 	unsigned int extra_bytes = 0;
+	unsigned int xres, yres;
 
 	if (devtype == visorinput_keyboard)
 		/* allocate room for devdata->keycode_table, filled in below */
@@ -406,7 +433,20 @@ devdata_create(struct visor_device *dev, enum visorinput_device_type devtype)
 			goto cleanups_register;
 		break;
 	case visorinput_mouse:
-		devdata->visorinput_dev = setup_client_mouse(devdata);
+		xres = read_input_channel_uint
+			(dev,
+			 offsetof(struct spar_input_channel_protocol,
+				  mouse.x_resolution),
+			 sizeofmemb(struct spar_input_channel_protocol,
+				    mouse.x_resolution));
+		yres = read_input_channel_uint
+			(dev,
+			 offsetof(struct spar_input_channel_protocol,
+				  mouse.y_resolution),
+			 sizeofmemb(struct spar_input_channel_protocol,
+				    mouse.y_resolution));
+		devdata->visorinput_dev =
+			setup_client_mouse(devdata, xres, yres);
 		if (!devdata->visorinput_dev)
 			goto cleanups_register;
 		break;
