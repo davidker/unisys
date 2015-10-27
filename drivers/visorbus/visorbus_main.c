@@ -516,6 +516,21 @@ static void dev_stop_periodic_work(struct visor_device *dev)
 	put_device(&dev->device);
 }
 
+static int visorbus_set_channel_state(struct visor_device *dev, u32 cli_state)
+{
+	int channel_offset, err;
+
+	channel_offset = offsetof(struct channel_header, cli_state_os);
+	err = visorbus_write_channel(dev, channel_offset, &cli_state, 4);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to set client_state_os from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+	return err;
+}
+
 /*
  * visordriver_remove_device() - handle visor device going away
  * @xdev: struct device for the visor device being removed
@@ -536,6 +551,7 @@ static int visordriver_remove_device(struct device *xdev)
 	drv->remove(dev);
 	mutex_unlock(&dev->visordriver_callback_lock);
 	dev_stop_periodic_work(dev);
+	visorbus_set_channel_state(dev, CHANNELCLI_ATTACHED);
 	put_device(&dev->device);
 	return 0;
 }
@@ -602,12 +618,15 @@ EXPORT_SYMBOL_GPL(visorbus_write_channel);
 int visorbus_enable_channel_interrupts(struct visor_device *dev)
 {
 	struct visor_driver *drv = to_visor_driver(dev->device.driver);
+	int err;
 
 	if (!drv->channel_interrupt) {
 		dev_err(&dev->device, "%s no interrupt function!\n", __func__);
 		return -ENOENT;
 	}
-
+	err = visorbus_set_channel_state(dev, CHANNELCLI_OWNED);
+	if (err)
+		return err;
 	return dev_start_periodic_work(dev);
 }
 EXPORT_SYMBOL_GPL(visorbus_enable_channel_interrupts);
@@ -666,6 +685,9 @@ int create_visor_device(struct visor_device *dev)
 	 */
 	err = dev_set_name(&dev->device, "vbus%u:dev%u",
 			   chipset_bus_no, chipset_dev_no);
+	if (err)
+		goto err_put;
+	err = visorbus_set_channel_state(dev, CHANNELCLI_ATTACHED);
 	if (err)
 		goto err_put;
 	/*
@@ -1115,6 +1137,9 @@ static void resume_state_change_complete(struct visor_device *dev, int status)
 		return;
 
 	dev->resuming = false;
+	/* Error resuming channel, so we shouldn't be OWNED */
+	if (status < 0)
+		visorbus_set_channel_state(dev, CHANNELCLI_ATTACHED);
 	/*
 	 * Notify the chipset driver that the resume is complete,
 	 * which will presumably want to send some sort of response to
