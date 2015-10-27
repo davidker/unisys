@@ -465,6 +465,23 @@ dev_stop_periodic_work(struct visor_device *dev)
 	put_device(&dev->device);
 }
 
+int visorbus_set_channel_state(struct visor_device *dev, u32 cli_state)
+{
+	int channel_offset = 0, err = 0;
+
+	channel_offset = offsetof(struct channel_header, cli_state_os);
+
+	err = visorbus_write_channel(dev, channel_offset, &cli_state, 4);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to set client_state_os from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+
+	return err;
+}
+
 /**
  * visordriver_remove_device() - handle visor device going away
  * @xdev: struct device for the visor device being removed
@@ -490,6 +507,7 @@ visordriver_remove_device(struct device *xdev)
 	mutex_unlock(&dev->visordriver_callback_lock);
 	dev_stop_periodic_work(dev);
 
+	visorbus_set_channel_state(dev, CHANNELCLI_ATTACHED);
 	put_device(&dev->device);
 	return 0;
 }
@@ -666,6 +684,7 @@ create_visor_device(struct visor_device *dev)
 	 */
 	dev_set_name(&dev->device, "vbus%u:dev%u",
 		     chipset_bus_no, chipset_dev_no);
+	visorbus_set_channel_state(dev, CHANNELCLI_ATTACHED);
 
 	/*
 	 * device_add does this:
@@ -1222,8 +1241,10 @@ resume_state_change_complete(struct visor_device *dev, int status)
 
 	dev->resuming = false;
 
-	/*
-	 * Notify the chipset driver that the resume is complete,
+	if (status < 0)
+		visorbus_set_channel_state(dev, CHANNELCLI_ATTACHED);
+
+	/* Notify the chipset driver that the resume is complete,
 	 * which will presumably want to send some sort of response to
 	 * the initiator.
 	 */
@@ -1296,6 +1317,7 @@ initiate_chipset_device_pause_resume(struct visor_device *dev, bool is_pause)
 		}
 
 		dev->resuming = true;
+		visorbus_set_channel_state(dev, CHANNELCLI_OWNED);
 		rc = drv->resume(dev, resume_state_change_complete);
 	}
 	if (rc < 0) {
