@@ -1732,8 +1732,10 @@ static int visornic_poll(struct napi_struct *napi, int budget)
 	service_resp_queue(devdata->cmdrsp, devdata, &rx_count, budget);
 
 	/* If there aren't any more packets to receive stop the poll */
-	if (rx_count < budget)
+	if (rx_count < budget) {
 		napi_complete_done(napi, rx_count);
+		visorbus_rearm_channel_interrupts(devdata->dev);
+	}
 
 	return rx_count;
 }
@@ -1751,6 +1753,8 @@ static void visornic_irq(struct visor_device *v)
 	if (!visorchannel_signalempty(devdata->dev->visorchannel,
 				      IOCHAN_FROM_IOPART))
 		napi_schedule(&devdata->napi);
+	else
+		visorbus_rearm_channel_interrupts(v);
 }
 
 /* visornic_probe - probe function for visornic devices
@@ -1888,10 +1892,14 @@ static int visornic_probe(struct visor_device *dev)
 		goto cleanup_xmit_cmdrsp;
 	}
 
-	/* Note: Interrupts have to be enable before the while loop below
-	 * because the napi routine is responsible for setting enab_dis_acked
-	 */
+	/* Let's start our threads to get responses */
 	netif_napi_add(netdev, &devdata->napi, visornic_poll, NAPI_WEIGHT);
+
+	/*
+	 * Note: Interrupts have to be enabled before we register because the
+	 * napi routine is responsible for setting enab_dis_acked
+	 */
+	visorbus_register_for_channel_interrupts(dev, IOCHAN_FROM_IOPART);
 	visorbus_enable_channel_interrupts(dev);
 
 	err = register_netdev(netdev);
