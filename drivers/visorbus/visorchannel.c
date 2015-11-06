@@ -11,6 +11,7 @@
 
 #include <linux/uuid.h>
 #include <linux/io.h>
+#include <linux/llist.h>
 #include <linux/slab.h>
 #include <linux/visorbus.h>
 
