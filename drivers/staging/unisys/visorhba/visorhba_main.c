@@ -952,11 +952,15 @@ static void process_incoming_rsps(unsigned long v)
 	const int size = sizeof(*cmdrsp);
 
 	cmdrsp = kmalloc(size, GFP_ATOMIC);
-	if (!cmdrsp)
+	if (!cmdrsp) {
+		visorbus_rearm_channel_interrupts(devdata->dev);
 		return;
+	}
 
 	/* drain queue */
 	drain_queue(cmdrsp, devdata);
+
+	visorbus_rearm_channel_interrupts(devdata->dev);
 
 	kfree(cmdrsp);
 }

@@ -186,6 +186,7 @@ int visorbus_write_channel(struct visor_device *dev,
 			   unsigned long nbytes);
 void visorbus_enable_channel_interrupts(struct visor_device *dev);
 void visorbus_disable_channel_interrupts(struct visor_device *dev);
+void visorbus_rearm_channel_interrupts(struct visor_device *dev);
 
 /* Levels of severity for diagnostic events, in order from lowest severity to
  * highest (i.e. fatal errors are the most severe, and should always be logged,
