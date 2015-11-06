@@ -439,7 +439,6 @@ dev_periodic_work(unsigned long __opaque)
 	struct visor_driver *drv = to_visor_driver(dev->device.driver);
 
 	drv->channel_interrupt(dev);
-	mod_timer(&dev->timer, jiffies + POLLJIFFIES_NORMALCHANNEL);
 }
 
 static void
@@ -600,6 +599,22 @@ visorbus_disable_channel_interrupts(struct visor_device *dev)
 	dev_stop_periodic_work(dev);
 }
 EXPORT_SYMBOL_GPL(visorbus_disable_channel_interrupts);
+
+/**
+ * visorbus_rearm_channel_interrupts() - rearms the interrupts.
+ * @dev: the device on which to rearm interrupts
+ *
+ * When an interrupt is received the device must rearm the interrupt
+ * before receiving another one from s-Par. This function provides
+ * the mechanism for the driver to call to re-arm the interrupt after
+ * it has finished doing its processing.
+ */
+void
+visorbus_rearm_channel_interrupts(struct visor_device *dev)
+{
+	mod_timer(&dev->timer, jiffies + POLLJIFFIES_NORMALCHANNEL);
+}
+EXPORT_SYMBOL_GPL(visorbus_rearm_channel_interrupts);
 
 int visorbus_set_channel_features(struct visor_device *dev, u64 feature_bits)
 {
