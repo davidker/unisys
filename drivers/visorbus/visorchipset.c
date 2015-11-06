@@ -674,11 +674,26 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	dev_info->chipset_dev_no = dev_no;
 	guid_copy(&dev_info->inst, &cmd->create_device.dev_inst_guid);
 	dev_info->device.parent = &bus_info->device;
+	dev_info->gsi_vector = cmd->create_device.intr.recv_irq_handle;
+	if (dev_info->gsi_vector > 0) {
+		dev_info->irq = acpi_register_gsi(&dev_info->device,
+						  dev_info->gsi_vector,
+						  ACPI_LEVEL_SENSITIVE,
+						  ACPI_ACTIVE_LOW);
+		if (dev_info->irq < 0) {
+			dev_err(&dev_info->device,
+				"Error registering gsi number: %d (%d)",
+				dev_info->gsi_vector, dev_info->irq);
+			dev_info->irq = 0;
+		}
+	}
 	visorchannel = visorchannel_create(cmd->create_device.channel_addr,
 					   GFP_KERNEL,
 					   &cmd->create_device.data_type_guid,
 					   true);
 	if (!visorchannel) {
+		if (dev_info->gsi_vector > 0 && dev_info->irq > 0)
+			acpi_unregister_gsi(dev_info->gsi_vector);
 		dev_err(&chipset_dev->acpi_device->dev,
 			"failed to create visorchannel: %d/%d\n",
 			bus_no, dev_no);
@@ -816,7 +831,10 @@ static int visorbus_device_destroy(struct controlvm_message *inmsg)
 		dev_info->pending_msg_hdr = pmsg_hdr;
 	}
 	kfree(dev_info->name);
+	if (dev_info->gsi_vector > 0 && dev_info->irq > 0)
+		acpi_unregister_gsi(dev_info->gsi_vector);
 	remove_visor_device(dev_info);
+
 	return 0;
 
 err_respond:
