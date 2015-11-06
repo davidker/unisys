@@ -612,7 +612,7 @@ static void visorinput_channel_interrupt(struct visor_device *dev)
 	struct visorinput_devdata *devdata = dev_get_drvdata(&dev->device);
 
 	if (!devdata)
-		return;
+		goto rearm_interrupts;
 
 	visorinput_dev = devdata->visorinput_dev;
 
@@ -692,6 +692,9 @@ static void visorinput_channel_interrupt(struct visor_device *dev)
 			break;
 		}
 	}
+
+rearm_interrupts:
+	visorbus_rearm_channel_interrupts(dev);
 }
 
 static int visorinput_pause(struct visor_device *dev,
