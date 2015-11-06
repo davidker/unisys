@@ -1635,8 +1635,11 @@ static int visornic_poll(struct napi_struct *napi, int budget)
 	send_rcv_posts_if_needed(devdata);
 	service_resp_queue(devdata->cmdrsp, devdata, &rx_count, budget);
 	/* If there aren't any more packets to receive stop the poll */
-	if (rx_count < budget)
+	if (rx_count < budget) {
 		napi_complete_done(napi, rx_count);
+		visorbus_rearm_channel_interrupts(devdata->dev);
+	}
+
 	return rx_count;
 }
 
@@ -1653,6 +1656,8 @@ static void visornic_irq(struct visor_device *v)
 	if (!visorchannel_signalempty(devdata->dev->visorchannel,
 				      IOCHAN_FROM_IOPART))
 		napi_schedule(&devdata->napi);
+	else
+		visorbus_rearm_channel_interrupts(v);
 }
 
 /* visornic_probe - probe function for visornic devices
@@ -1775,10 +1780,13 @@ static int visornic_probe(struct visor_device *dev)
 			__func__, err);
 		goto cleanup_xmit_cmdrsp;
 	}
-	/* Note: Interrupts have to be enable before the while loop below
-	 * because the napi routine is responsible for setting enab_dis_acked
-	 */
 	netif_napi_add(netdev, &devdata->napi, visornic_poll, NAPI_WEIGHT);
+
+	/*
+	 * Note: Interrupts have to be enabled before we register because the
+	 * napi routine is responsible for setting enab_dis_acked
+	 */
+	visorbus_register_for_channel_interrupts(dev, IOCHAN_FROM_IOPART);
 	visorbus_enable_channel_interrupts(dev);
 	err = register_netdev(netdev);
 	if (err) {
@@ -1868,12 +1876,7 @@ static void visornic_remove(struct visor_device *dev)
 	debugfs_remove_recursive(devdata->eth_debugfs_dir);
 	/* this will call visornic_close() */
 	unregister_netdev(netdev);
-<<<<<<< HEAD
-	del_timer_sync(&devdata->irq_poll_timer);
-=======
-
 	visorbus_disable_channel_interrupts(dev);
->>>>>>> staging: unisys: Convert visornic to use visorbus channel interrupt code
 	netif_napi_del(&devdata->napi);
 	dev_set_drvdata(&dev->device, NULL);
 	host_side_disappeared(devdata);
@@ -1939,17 +1942,8 @@ static int visornic_resume(struct visor_device *dev,
 	}
 	devdata->server_change_state = true;
 	spin_unlock_irqrestore(&devdata->priv_lock, flags);
-<<<<<<< HEAD
-	/* Must transition channel to ATTACHED state BEFORE we can start using
-	 * the device again.
-	 * TODO: State transitions
-	 */
-	mod_timer(&devdata->irq_poll_timer, msecs_to_jiffies(2));
-=======
 
 	visorbus_enable_channel_interrupts(dev);
-
->>>>>>> staging: unisys: Convert visornic to use visorbus channel interrupt code
 	rtnl_lock();
 	dev_open(netdev);
 	rtnl_unlock();
