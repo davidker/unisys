@@ -214,5 +214,8 @@ int main(void)
 	DEVID_FIELD(tb_service_id, protocol_version);
 	DEVID_FIELD(tb_service_id, protocol_revision);
 
+	DEVID(visorbus_device_id);
+	DEVID_FIELD(visorbus_device_id, guid);
+
 	return 0;
 }
