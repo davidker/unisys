@@ -1330,6 +1330,18 @@ static int do_wmi_entry(const char *filename, void *symval, char *alias)
 	return 1;
 }
 
+/* looks like: "visorbus:UUID" */
+static int do_visorbus_entry(const char *filename,
+			     void *symval, char *alias)
+{
+	DEF_FIELD(symval, visorbus_device_id, guid);
+
+	sprintf(alias, "visorbus:");
+	add_uuid(alias, guid);
+	return 1;
+}
+ADD_TO_DEVTABLE("visorbus", visorbus_device_id, do_visorbus_entry);
+
 /* Does namelen bytes of name exactly match the symbol? */
 static bool sym_is(const char *name, unsigned namelen, const char *symbol)
 {
