@@ -241,5 +241,8 @@ int main(void)
 	DEVID(mhi_device_id);
 	DEVID_FIELD(mhi_device_id, chan);
 
+	DEVID(visorbus_device_id);
+	DEVID_FIELD(visorbus_device_id, guid);
+
 	return 0;
 }
