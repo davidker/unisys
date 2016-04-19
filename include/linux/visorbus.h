@@ -18,6 +18,7 @@
 #define __VISORBUS_H__
 
 #include <linux/device.h>
+#include <linux/mod_devicetable.h>
 
 #define VISOR_CHANNEL_SIGNATURE ('L' << 24 | 'N' << 16 | 'C' << 8 | 'E')
 
@@ -264,17 +265,6 @@ struct visor_device {
 typedef void (*visorbus_state_complete_func) (struct visor_device *dev,
 					      int status);
 
-/*
- * This struct describes a specific visor channel, by providing its GUID, name,
- * and sizes.
- */
-struct visor_channeltype_descriptor {
-	const guid_t guid;
-	const char *name;
-	u64 min_bytes;
-	u32 version;
-};
-
 /**
  * struct visor_driver - Information provided by each visor driver when it
  *                       registers with the visorbus driver
@@ -312,7 +302,7 @@ struct visor_driver {
 	const char *name;
 	const char *version;
 	struct module *owner;
-	struct visor_channeltype_descriptor *channel_types;
+	struct visorbus_device_id *channel_types;
 	int (*probe)(struct visor_device *dev);
 	void (*remove)(struct visor_device *dev);
 	void (*channel_interrupt)(struct visor_device *dev);
