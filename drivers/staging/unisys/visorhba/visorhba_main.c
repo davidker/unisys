@@ -24,7 +24,7 @@
 static struct dentry *visorhba_debugfs_dir;
 
 /* GUIDS for HBA channel type supported by this driver */
-static struct visor_channeltype_descriptor visorhba_channel_types[] = {
+static struct visorbus_device_id visorhba_channel_types[] = {
 	/* Note that the only channel type we expect to be reported by the
 	 * bus driver is the VISOR_VHBA channel.
 	 */
@@ -33,7 +33,6 @@ static struct visor_channeltype_descriptor visorhba_channel_types[] = {
 	{}
 };
 MODULE_DEVICE_TABLE(visorbus, visorhba_channel_types);
-MODULE_ALIAS("visorbus:" VISOR_VHBA_CHANNEL_GUID_STR);
 
 struct visordisk_info {
 	struct scsi_device *sdev;
