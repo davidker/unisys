@@ -714,4 +714,12 @@ struct tb_service_id {
 #define TBSVC_MATCH_PROTOCOL_VERSION	0x0004
 #define TBSVC_MATCH_PROTOCOL_REVISION	0x0008
 
+struct visorbus_device_id {
+	const guid_t guid;
+	const char *name;
+	__u32 min_bytes;
+	__u32 version;
+	__u32 reserved;
+};
+
 #endif /* LINUX_MOD_DEVICETABLE_H */
