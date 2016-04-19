@@ -673,4 +673,9 @@ struct fsl_mc_device_id {
 };
 
 
+struct visorbus_device_id {
+	const uuid_le uuid;
+	const char *name;
+};
+
 #endif /* LINUX_MOD_DEVICETABLE_H */
