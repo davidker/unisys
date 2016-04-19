@@ -821,4 +821,12 @@ struct wmi_device_id {
 	const void *context;
 };
 
+struct visorbus_device_id {
+	const uuid_le guid;
+	const char *name;
+	__u32 min_bytes;
+	__u32 version;
+	__u32 reserved;
+};
+
 #endif /* LINUX_MOD_DEVICETABLE_H */
