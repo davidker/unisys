@@ -2021,8 +2021,6 @@ static int visornic_init(void)
 	visornic_debugfs_dir = debugfs_create_dir("visornic", NULL);
 	debugfs_create_file("info", 0400, visornic_debugfs_dir, NULL,
 			    &debugfs_info_fops);
-	debugfs_create_file("enable_ints", 0200, visornic_debugfs_dir, NULL,
-			    &debugfs_enable_ints_fops);
 	err = visorbus_register_visor_driver(&visornic_driver);
 	if (err)
 		debugfs_remove_recursive(visornic_debugfs_dir);
