@@ -2151,10 +2151,6 @@ static int visornic_init(void)
 				  &debugfs_info_fops);
 	if (!ret)
 		goto cleanup_debugfs;
-	ret = debugfs_create_file("enable_ints", 0200, visornic_debugfs_dir,
-				  NULL, &debugfs_enable_ints_fops);
-	if (!ret)
-		goto cleanup_debugfs;
 
 	err = visorbus_register_visor_driver(&visornic_driver);
 	if (err)
