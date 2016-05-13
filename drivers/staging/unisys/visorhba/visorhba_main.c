@@ -39,7 +39,7 @@
 static struct dentry *visorhba_debugfs_dir;
 
 /* GUIDS for HBA channel type supported by this driver */
-static struct visor_channeltype_descriptor visorhba_channel_types[] = {
+static struct visorbus_device_id visorhba_channel_types[] = {
 	/* Note that the only channel type we expect to be reported by the
 	 * bus driver is the SPAR_VHBA channel.
 	 */

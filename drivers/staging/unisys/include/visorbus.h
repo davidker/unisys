@@ -31,6 +31,7 @@
 
 #include <linux/device.h>
 #include <linux/module.h>
+#include <linux/mod_devicetable.h>
 #include <linux/poll.h>
 #include <linux/kernel.h>
 #include <linux/uuid.h>
@@ -57,11 +58,12 @@ struct visorchipset_state {
 /** This struct describes a specific Supervisor channel, by providing its
  *  GUID, name, and sizes.
  */
+/*  Replaced with visorbus_device_id in mod_deviceinfo.h
 struct visor_channeltype_descriptor {
 	const uuid_le guid;
 	const char *name;
 };
-
+*/
 /**
  * struct visor_driver - Information provided by each visor driver when it
  * registers with the visorbus driver.
@@ -96,7 +98,7 @@ struct visor_channeltype_descriptor {
 struct visor_driver {
 	const char *name;
 	struct module *owner;
-	struct visor_channeltype_descriptor *channel_types;
+	struct visorbus_device_id *channel_types;
 	int (*probe)(struct visor_device *dev);
 	void (*remove)(struct visor_device *dev);
 	void (*channel_interrupt)(struct visor_device *dev);

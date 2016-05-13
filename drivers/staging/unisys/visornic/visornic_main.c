@@ -37,7 +37,7 @@
 #define NAPI_WEIGHT 64
 
 /* GUIDS for director channel type supported by this driver.  */
-static struct visor_channeltype_descriptor visornic_channel_types[] = {
+static struct visorbus_device_id visornic_channel_types[] = {
 	/* Note that the only channel type we expect to be reported by the
 	 * bus driver is the SPAR_VNIC channel.
 	 */

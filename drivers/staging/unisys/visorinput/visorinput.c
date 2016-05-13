@@ -732,7 +732,7 @@ out:
 }
 
 /* GUIDS for all channel types supported by this driver. */
-static struct visor_channeltype_descriptor visorinput_channel_types[] = {
+static struct visorbus_device_id visorinput_channel_types[] = {
 	{ SPAR_KEYBOARD_CHANNEL_PROTOCOL_UUID, "keyboard"},
 	{ SPAR_MOUSE_CHANNEL_PROTOCOL_UUID, "mouse"},
 	{ NULL_UUID_LE, NULL }

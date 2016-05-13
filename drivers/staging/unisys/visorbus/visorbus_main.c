@@ -121,10 +121,10 @@ visorbus_match(struct device *xdev, struct device_driver *xdrv)
 		return 0;
 
 	for (i = 0;
-	     (uuid_le_cmp(drv->channel_types[i].guid, NULL_UUID_LE) != 0) ||
+	     (uuid_le_cmp(drv->channel_types[i].uuid, NULL_UUID_LE) != 0) ||
 	     (drv->channel_types[i].name);
 	     i++)
-		if (uuid_le_cmp(drv->channel_types[i].guid,
+		if (uuid_le_cmp(drv->channel_types[i].uuid,
 				channel_type) == 0)
 			return i + 1;
 
@@ -808,9 +808,9 @@ fix_vbus_dev_info(struct visor_device *visordev)
 	 * type name
 	 */
 	for (i = 0; visordrv->channel_types[i].name; i++) {
-		if (memcmp(&visordrv->channel_types[i].guid,
+		if (memcmp(&visordrv->channel_types[i].uuid,
 			   &visordev->channel_type_guid,
-			   sizeof(visordrv->channel_types[i].guid)) == 0) {
+			   sizeof(visordrv->channel_types[i].uuid)) == 0) {
 			chan_type_name = visordrv->channel_types[i].name;
 			break;
 		}
