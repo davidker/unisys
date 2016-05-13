@@ -48,7 +48,6 @@ static struct visorbus_device_id visorhba_channel_types[] = {
 };
 
 MODULE_DEVICE_TABLE(visorbus, visorhba_channel_types);
-MODULE_ALIAS("visorbus:" SPAR_VHBA_CHANNEL_PROTOCOL_UUID_STR);
 
 struct visordisk_info {
 	u32 valid;
