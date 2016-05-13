@@ -46,13 +46,6 @@ static struct visorbus_device_id visornic_channel_types[] = {
 	{}
 };
 MODULE_DEVICE_TABLE(visorbus, visornic_channel_types);
-/* FIXME XXX: This next line of code must be fixed and removed before
- * acceptance into the 'normal' part of the kernel.  It is only here as a place
- * holder to get module autoloading functionality working for visorbus.  Code
- * must be added to scripts/mode/file2alias.c, etc., to get this working
- * properly.
- */
-MODULE_ALIAS("visorbus:" VISOR_VNIC_CHANNEL_GUID_STR);
 
 struct chanstat {
 	unsigned long got_rcv;
