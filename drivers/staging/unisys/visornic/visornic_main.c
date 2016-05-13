@@ -37,7 +37,7 @@
 #define VISOR_VNIC_CHANNEL_GUID_STR \
 	"8cd5994d-c58e-11da-95a9-00e08161165f"
 
-static struct visor_channeltype_descriptor visornic_channel_types[] = {
+static struct visorbus_device_id visornic_channel_types[] = {
 	/* Note that the only channel type we expect to be reported by the bus
 	 * driver is the VISOR_VNIC channel.
 	 */
