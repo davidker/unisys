@@ -33,7 +33,6 @@ static struct visorbus_device_id visorhba_channel_types[] = {
 	{}
 };
 MODULE_DEVICE_TABLE(visorbus, visorhba_channel_types);
-MODULE_ALIAS("visorbus:" VISOR_VHBA_CHANNEL_GUID_STR);
 
 struct visordisk_info {
 	struct scsi_device *sdev;
