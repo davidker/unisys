@@ -451,6 +451,9 @@ devdata_create(struct visor_device *dev, enum visorinput_device_type devtype)
 			goto cleanups_register;
 		break;
 	}
+	dev_info(&devdata->dev->device, "created %s %s\n",
+		 devdata->visorinput_dev->name,
+		 dev_name(&devdata->visorinput_dev->dev));
 
 	dev_set_drvdata(&dev->device, devdata);
 	mutex_unlock(&devdata->lock_visor_dev);
