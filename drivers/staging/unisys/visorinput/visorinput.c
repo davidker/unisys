@@ -16,6 +16,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/uuid.h>
+#include <linux/workqueue.h>
 #include <linux/visorbus.h>
 
 /* These defines identify mouse and keyboard activity which is specified by the
@@ -108,6 +109,7 @@ struct visorinput_devdata {
 	struct input_dev *visorinput_dev;
 	bool paused;
 	bool interrupts_enabled;
+	struct work_struct interrupt_work;
 	/* size of following array */
 	unsigned int keycode_table_bytes;
 	/* for keyboard devices: visorkbd_keycode[] + visorkbd_ext_keycode[] */
@@ -316,26 +318,21 @@ static int calc_button(int x)
 	}
 }
 
-/*
- * This is used only when this driver is active as an input driver in the
- * client guest partition.  It is called periodically so we can obtain inputs
- * from the channel, and deliver them to the guest OS.
- */
-static void visorinput_channel_interrupt(struct visor_device *dev)
+static void interrupt_work(struct work_struct *work)
 {
 	struct visor_inputreport r;
 	int scancode, keycode;
 	struct input_dev *visorinput_dev;
 	int xmotion, ymotion, button;
 	int i;
-	struct visorinput_devdata *devdata = dev_get_drvdata(&dev->device);
+	struct visorinput_devdata *devdata;
 
+	devdata = container_of(work, struct visorinput_devdata, interrupt_work);
 	if (!devdata)
-		goto rearm_interrupts;
+		return;
 
 	visorinput_dev = devdata->visorinput_dev;
-
-	while (!visorchannel_signalremove(dev->visorchannel, 0, &r)) {
+	while (!visorchannel_signalremove(devdata->dev->visorchannel, 0, &r)) {
 		scancode = r.activity.arg1;
 		keycode = scancode_to_keycode(scancode);
 		switch (r.activity.action) {
@@ -411,9 +408,19 @@ static void visorinput_channel_interrupt(struct visor_device *dev)
 			break;
 		}
 	}
+	visorbus_rearm_channel_interrupts(devdata->dev);
+}
 
-rearm_interrupts:
-	visorbus_rearm_channel_interrupts(dev);
+/*
+ * This is used only when this driver is active as an input driver in the
+ * client guest partition.  It is called periodically so we can obtain inputs
+ * from the channel, and deliver them to the guest OS.
+ */
+static void visorinput_channel_interrupt(struct visor_device *dev)
+{
+	struct visorinput_devdata *devdata = dev_get_drvdata(&dev->device);
+
+	schedule_work(&devdata->interrupt_work);
 }
 
 static int visorinput_open(struct input_dev *visorinput_dev)
@@ -619,6 +626,7 @@ static struct visorinput_devdata *devdata_create(struct visor_device *dev,
 		 dev_name(&devdata->visorinput_dev->dev));
 
 	dev_set_drvdata(&dev->device, devdata);
+	INIT_WORK(&devdata->interrupt_work, interrupt_work);
 	mutex_unlock(&devdata->lock_visor_dev);
 
 	/*
@@ -683,7 +691,6 @@ static void visorinput_remove(struct visor_device *dev)
 	if (!devdata)
 		return;
 
-	mutex_lock(&devdata->lock_visor_dev);
 	visorbus_disable_channel_interrupts(dev);
 
 	/*
@@ -691,6 +698,8 @@ static void visorinput_remove(struct visor_device *dev)
 	 * visorinput_channel_interrupt()
 	 */
 
+	cancel_work_sync(&devdata->interrupt_work);
+	mutex_lock(&devdata->lock_visor_dev);
 	dev_set_drvdata(&dev->device, NULL);
 	mutex_unlock(&devdata->lock_visor_dev);
 
