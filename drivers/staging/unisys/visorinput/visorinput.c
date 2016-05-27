@@ -257,6 +257,165 @@ static const unsigned char visorkbd_ext_keycode[KEYCODE_TABLE_BYTES] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		    /* 0x70 */
 };
 
+/*
+ * Make it so the current locking state of the locking key indicated by
+ * <keycode> is as indicated by <desired_state> (1=locked, 0=unlocked).
+ */
+static void handle_locking_key(struct input_dev *visorinput_dev, int keycode,
+			       int desired_state)
+{
+	int led;
+
+	switch (keycode) {
+	case KEY_CAPSLOCK:
+		led = LED_CAPSL;
+		break;
+	case KEY_SCROLLLOCK:
+		led = LED_SCROLLL;
+		break;
+	case KEY_NUMLOCK:
+		led = LED_NUML;
+		break;
+	default:
+		led = -1;
+		return;
+	}
+	if (test_bit(led, visorinput_dev->led) != desired_state) {
+		input_report_key(visorinput_dev, keycode, 1);
+		input_sync(visorinput_dev);
+		input_report_key(visorinput_dev, keycode, 0);
+		input_sync(visorinput_dev);
+		__change_bit(led, visorinput_dev->led);
+	}
+}
+
+/*
+ * <scancode> is either a 1-byte scancode, or an extended 16-bit scancode
+ * with 0xE0 in the low byte and the extended scancode value in the next
+ * higher byte.
+ */
+static int scancode_to_keycode(int scancode)
+{
+	if (scancode > 0xff)
+		return visorkbd_ext_keycode[(scancode >> 8) & 0xff];
+
+	return visorkbd_keycode[scancode];
+}
+
+static int calc_button(int x)
+{
+	switch (x) {
+	case 1:
+		return BTN_LEFT;
+	case 2:
+		return BTN_MIDDLE;
+	case 3:
+		return BTN_RIGHT;
+	default:
+		return -EINVAL;
+	}
+}
+
+/*
+ * This is used only when this driver is active as an input driver in the
+ * client guest partition.  It is called periodically so we can obtain inputs
+ * from the channel, and deliver them to the guest OS.
+ */
+static void visorinput_channel_interrupt(struct visor_device *dev)
+{
+	struct visor_inputreport r;
+	int scancode, keycode;
+	struct input_dev *visorinput_dev;
+	int xmotion, ymotion, button;
+	int i;
+	struct visorinput_devdata *devdata = dev_get_drvdata(&dev->device);
+
+	if (!devdata)
+		goto rearm_interrupts;
+
+	visorinput_dev = devdata->visorinput_dev;
+
+	while (!visorchannel_signalremove(dev->visorchannel, 0, &r)) {
+		scancode = r.activity.arg1;
+		keycode = scancode_to_keycode(scancode);
+		switch (r.activity.action) {
+		case INPUTACTION_KEY_DOWN:
+			input_report_key(visorinput_dev, keycode, 1);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_KEY_UP:
+			input_report_key(visorinput_dev, keycode, 0);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_KEY_DOWN_UP:
+			input_report_key(visorinput_dev, keycode, 1);
+			input_sync(visorinput_dev);
+			input_report_key(visorinput_dev, keycode, 0);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_SET_LOCKING_KEY_STATE:
+			handle_locking_key(visorinput_dev, keycode,
+					   r.activity.arg2);
+			break;
+		case INPUTACTION_XY_MOTION:
+			xmotion = r.activity.arg1;
+			ymotion = r.activity.arg2;
+			input_report_abs(visorinput_dev, ABS_X, xmotion);
+			input_report_abs(visorinput_dev, ABS_Y, ymotion);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_MOUSE_BUTTON_DOWN:
+			button = calc_button(r.activity.arg1);
+			if (button < 0)
+				break;
+			input_report_key(visorinput_dev, button, 1);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_MOUSE_BUTTON_UP:
+			button = calc_button(r.activity.arg1);
+			if (button < 0)
+				break;
+			input_report_key(visorinput_dev, button, 0);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_MOUSE_BUTTON_CLICK:
+			button = calc_button(r.activity.arg1);
+			if (button < 0)
+				break;
+			input_report_key(visorinput_dev, button, 1);
+			input_sync(visorinput_dev);
+			input_report_key(visorinput_dev, button, 0);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_MOUSE_BUTTON_DCLICK:
+			button = calc_button(r.activity.arg1);
+			if (button < 0)
+				break;
+			for (i = 0; i < 2; i++) {
+				input_report_key(visorinput_dev, button, 1);
+				input_sync(visorinput_dev);
+				input_report_key(visorinput_dev, button, 0);
+				input_sync(visorinput_dev);
+			}
+			break;
+		case INPUTACTION_WHEEL_ROTATE_AWAY:
+			input_report_rel(visorinput_dev, REL_WHEEL, 1);
+			input_sync(visorinput_dev);
+			break;
+		case INPUTACTION_WHEEL_ROTATE_TOWARD:
+			input_report_rel(visorinput_dev, REL_WHEEL, -1);
+			input_sync(visorinput_dev);
+			break;
+		default:
+			/* Unsupported input action */
+			break;
+		}
+	}
+
+rearm_interrupts:
+	visorbus_rearm_channel_interrupts(dev);
+}
+
 static int visorinput_open(struct input_dev *visorinput_dev)
 {
 	struct visorinput_devdata *devdata = input_get_drvdata(visorinput_dev);
@@ -537,164 +696,6 @@ static void visorinput_remove(struct visor_device *dev)
 
 	unregister_client_input(devdata->visorinput_dev);
 	kfree(devdata);
-}
-
-/*
- * Make it so the current locking state of the locking key indicated by
- * <keycode> is as indicated by <desired_state> (1=locked, 0=unlocked).
- */
-static void handle_locking_key(struct input_dev *visorinput_dev, int keycode,
-			       int desired_state)
-{
-	int led;
-
-	switch (keycode) {
-	case KEY_CAPSLOCK:
-		led = LED_CAPSL;
-		break;
-	case KEY_SCROLLLOCK:
-		led = LED_SCROLLL;
-		break;
-	case KEY_NUMLOCK:
-		led = LED_NUML;
-		break;
-	default:
-		led = -1;
-		return;
-	}
-	if (test_bit(led, visorinput_dev->led) != desired_state) {
-		input_report_key(visorinput_dev, keycode, 1);
-		input_sync(visorinput_dev);
-		input_report_key(visorinput_dev, keycode, 0);
-		input_sync(visorinput_dev);
-		__change_bit(led, visorinput_dev->led);
-	}
-}
-
-/*
- * <scancode> is either a 1-byte scancode, or an extended 16-bit scancode with
- * 0xE0 in the low byte and the extended scancode value in the next higher byte.
- */
-static int scancode_to_keycode(int scancode)
-{
-	if (scancode > 0xff)
-		return visorkbd_ext_keycode[(scancode >> 8) & 0xff];
-
-	return visorkbd_keycode[scancode];
-}
-
-static int calc_button(int x)
-{
-	switch (x) {
-	case 1:
-		return BTN_LEFT;
-	case 2:
-		return BTN_MIDDLE;
-	case 3:
-		return BTN_RIGHT;
-	default:
-		return -EINVAL;
-	}
-}
-
-/*
- * This is used only when this driver is active as an input driver in the
- * client guest partition.  It is called periodically so we can obtain inputs
- * from the channel, and deliver them to the guest OS.
- */
-static void visorinput_channel_interrupt(struct visor_device *dev)
-{
-	struct visor_inputreport r;
-	int scancode, keycode;
-	struct input_dev *visorinput_dev;
-	int xmotion, ymotion, button;
-	int i;
-	struct visorinput_devdata *devdata = dev_get_drvdata(&dev->device);
-
-	if (!devdata)
-		goto rearm_interrupts;
-
-	visorinput_dev = devdata->visorinput_dev;
-
-	while (!visorchannel_signalremove(dev->visorchannel, 0, &r)) {
-		scancode = r.activity.arg1;
-		keycode = scancode_to_keycode(scancode);
-		switch (r.activity.action) {
-		case INPUTACTION_KEY_DOWN:
-			input_report_key(visorinput_dev, keycode, 1);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_KEY_UP:
-			input_report_key(visorinput_dev, keycode, 0);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_KEY_DOWN_UP:
-			input_report_key(visorinput_dev, keycode, 1);
-			input_sync(visorinput_dev);
-			input_report_key(visorinput_dev, keycode, 0);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_SET_LOCKING_KEY_STATE:
-			handle_locking_key(visorinput_dev, keycode,
-					   r.activity.arg2);
-			break;
-		case INPUTACTION_XY_MOTION:
-			xmotion = r.activity.arg1;
-			ymotion = r.activity.arg2;
-			input_report_abs(visorinput_dev, ABS_X, xmotion);
-			input_report_abs(visorinput_dev, ABS_Y, ymotion);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_MOUSE_BUTTON_DOWN:
-			button = calc_button(r.activity.arg1);
-			if (button < 0)
-				break;
-			input_report_key(visorinput_dev, button, 1);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_MOUSE_BUTTON_UP:
-			button = calc_button(r.activity.arg1);
-			if (button < 0)
-				break;
-			input_report_key(visorinput_dev, button, 0);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_MOUSE_BUTTON_CLICK:
-			button = calc_button(r.activity.arg1);
-			if (button < 0)
-				break;
-			input_report_key(visorinput_dev, button, 1);
-			input_sync(visorinput_dev);
-			input_report_key(visorinput_dev, button, 0);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_MOUSE_BUTTON_DCLICK:
-			button = calc_button(r.activity.arg1);
-			if (button < 0)
-				break;
-			for (i = 0; i < 2; i++) {
-				input_report_key(visorinput_dev, button, 1);
-				input_sync(visorinput_dev);
-				input_report_key(visorinput_dev, button, 0);
-				input_sync(visorinput_dev);
-			}
-			break;
-		case INPUTACTION_WHEEL_ROTATE_AWAY:
-			input_report_rel(visorinput_dev, REL_WHEEL, 1);
-			input_sync(visorinput_dev);
-			break;
-		case INPUTACTION_WHEEL_ROTATE_TOWARD:
-			input_report_rel(visorinput_dev, REL_WHEEL, -1);
-			input_sync(visorinput_dev);
-			break;
-		default:
-			/* Unsupported input action */
-			break;
-		}
-	}
-
-rearm_interrupts:
-	visorbus_rearm_channel_interrupts(dev);
 }
 
 static int visorinput_pause(struct visor_device *dev,
