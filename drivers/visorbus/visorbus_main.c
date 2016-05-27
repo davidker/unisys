@@ -605,8 +605,11 @@ int visorbus_write_channel(struct visor_device *dev, unsigned long offset,
 }
 EXPORT_SYMBOL_GPL(visorbus_write_channel);
 
-static int visorbus_request_irq(struct visor_device *dev);
 static void visorbus_free_irq(struct visor_device *dev);
+static int visorbus_set_channel_features(struct visor_device *dev,
+					 u64 feature_bits);
+static int visorbus_clear_channel_features(struct visor_device *dev,
+					   u64 feature_bits);
 
 /*
  * visorbus_enable_channel_interrupts() - enables interrupts on the
@@ -625,17 +628,41 @@ int visorbus_enable_channel_interrupts(struct visor_device *dev)
 		dev_err(&dev->device, "%s no interrupt function!\n", __func__);
 		return -ENOENT;
 	}
+	if (dev->request_irq_done) {
+		err = visorbus_set_channel_features
+			(dev, VISOR_DRIVER_ENABLES_INTS |
+			 VISOR_DRIVER_DISABLES_INTS);
+		if (err) {
+			dev_err(&dev->device,
+				"%s failed set ENABLES ints from chan (%d)",
+				__func__, err);
+			goto err_irq_done;
+		}
+		err = visorbus_clear_channel_features(dev,
+						      VISOR_CHANNEL_IS_POLLING);
+		if (err) {
+			dev_err(&dev->device,
+				"%s failed clear POLLING flag from chan (%d)",
+				__func__, err);
+			goto err_irq_done;
+		}
+		err = visorbus_set_channel_state(dev, CHANNELCLI_OWNED);
+		if (err)
+			goto err_irq_done;
+		visorchannel_set_sig_features(dev->visorchannel,
+					      dev->recv_queue,
+					      VISOR_CHANNEL_ENABLE_INTS);
+		return 0;
+	}
 	err = visorbus_set_channel_state(dev, CHANNELCLI_OWNED);
 	if (err)
-		return err;
-	if (dev->irq_mode_desired) {
-		err = visorbus_request_irq(dev);
-		if (err)
-			return err;
-	}
-	if (dev->request_irq_done)
-		return -EEXIST;
-	return dev_start_periodic_work(dev);
+		goto err_irq_done;
+	dev_start_periodic_work(dev);
+	return 0;
+
+err_irq_done:
+	dev->request_irq_done = false;
+	return err;
 }
 EXPORT_SYMBOL_GPL(visorbus_enable_channel_interrupts);
 
@@ -750,55 +777,6 @@ static int visorbus_clear_channel_features(struct visor_device *dev,
 	return err;
 }
 
-static int visorbus_request_irq(struct visor_device *dev)
-{
-	int err = 0;
-
-	if (dev->request_irq_done)
-		return 0;
-
-	err = request_irq(dev->irq, visorbus_isr, IRQF_SHARED,
-			  dev_name(&dev->device), dev);
-	if (err < 0) {
-		dev_err(&dev->device,
-			"failed to request irq %d continuing to poll. err = %d",
-			dev->irq, err);
-		goto err_stay_in_polling;
-	}
-	dev->request_irq_done = true;
-
-	dev_dbg(&dev->device, "IRQ=%d registered\n", dev->irq);
-
-	err = visorbus_set_channel_features(dev, VISOR_DRIVER_ENABLES_INTS |
-					    VISOR_DRIVER_DISABLES_INTS);
-	if (err) {
-		dev_err(&dev->device,
-			"%s failed to set ENABLES ints from chan (%d)\n",
-			__func__, err);
-		goto err_free_irq;
-	}
-
-	err = visorbus_clear_channel_features(dev, VISOR_CHANNEL_IS_POLLING);
-	if (err) {
-		dev_err(&dev->device,
-			"%s failed to clear POLLING flag from chan (%d)\n",
-			__func__, err);
-		goto err_free_irq;
-	}
-
-	visorchannel_set_sig_features(dev->visorchannel, dev->recv_queue,
-				      VISOR_CHANNEL_ENABLE_INTS);
-
-	return 0;
-
-err_free_irq:
-	free_irq(dev->irq, dev);
-	dev->request_irq_done = false;
-
-err_stay_in_polling:
-	return err;
-}
-
 static void visorbus_free_irq(struct visor_device *dev)
 {
 	visorchannel_clear_sig_features(dev->visorchannel,
@@ -826,6 +804,8 @@ static void visorbus_free_irq(struct visor_device *dev)
 int visorbus_register_for_channel_interrupts(struct visor_device *dev,
 					     u32 queue)
 {
+	int err = 0;
+
 	if (!dev->irq) {
 		dev_dbg(&dev->device, "interrupts requested, but no irq\n");
 		dev->irq_mode_desired = false;
@@ -834,6 +814,21 @@ int visorbus_register_for_channel_interrupts(struct visor_device *dev,
 	dev->irq_mode_desired = true;
 	dev->recv_queue = queue;
 	dev->wait_ms = 2000;
+
+	if (dev->request_irq_done)
+		return 0;
+
+	err = request_irq(dev->irq, visorbus_isr, IRQF_SHARED,
+			  dev_name(&dev->device), dev);
+	if (err < 0) {
+		dev_err(&dev->device,
+			"failed to request irq %d continuing to poll. err = %d",
+			dev->irq, err);
+		return err;
+	}
+	dev->request_irq_done = true;
+	dev_dbg(&dev->device, "IRQ=%d registered\n", dev->irq);
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(visorbus_register_for_channel_interrupts);
