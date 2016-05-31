@@ -717,9 +717,9 @@ bus_epilog(struct visor_device *bus_info,
 	if (need_response) {
 		pmsg_hdr = kzalloc(sizeof(*pmsg_hdr), GFP_KERNEL);
 		if (!pmsg_hdr) {
-			POSTCODE_LINUX_4(MALLOC_FAILURE_PC, cmd,
-					 bus_info->chipset_bus_no,
-					 POSTCODE_SEVERITY_ERR);
+			POSTCODE_LINUX(MALLOC_FAILURE_PC, cmd,
+				       bus_info->chipset_bus_no,
+				       POSTCODE_SEVERITY_ERR);
 			return;
 		}
 
@@ -940,31 +940,31 @@ my_device_create(struct controlvm_message *inmsg)
 
 	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
 	if (!bus_info) {
-		POSTCODE_LINUX_4(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 		rc = -CONTROLVM_RESP_ERROR_BUS_INVALID;
 		goto out_respond;
 	}
 
 	if (bus_info->state.created == 0) {
-		POSTCODE_LINUX_4(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 		rc = -CONTROLVM_RESP_ERROR_BUS_INVALID;
 		goto out_respond;
 	}
 
 	dev_info = visorbus_get_device_by_id(bus_no, dev_no, NULL);
 	if (dev_info && (dev_info->state.created == 1)) {
-		POSTCODE_LINUX_4(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 		rc = -CONTROLVM_RESP_ERROR_ALREADY_DONE;
 		goto out_respond;
 	}
 
 	dev_info = kzalloc(sizeof(*dev_info), GFP_KERNEL);
 	if (!dev_info) {
-		POSTCODE_LINUX_4(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 		rc = -CONTROLVM_RESP_ERROR_KMALLOC_FAILED;
 		goto out_respond;
 	}
@@ -976,8 +976,8 @@ my_device_create(struct controlvm_message *inmsg)
 	/* not sure where the best place to set the 'parent' */
 	dev_info->device.parent = &bus_info->device;
 
-	POSTCODE_LINUX_4(DEVICE_CREATE_ENTRY_PC, dev_no, bus_no,
-			 POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(DEVICE_CREATE_ENTRY_PC, dev_no, bus_no,
+		       POSTCODE_SEVERITY_INFO);
 
 	visorchannel =
 	       visorchannel_create_with_lock(cmd->create_device.channel_addr,
@@ -986,8 +986,8 @@ my_device_create(struct controlvm_message *inmsg)
 					     cmd->create_device.data_type_uuid);
 
 	if (!visorchannel) {
-		POSTCODE_LINUX_4(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 		rc = -CONTROLVM_RESP_ERROR_KMALLOC_FAILED;
 		kfree(dev_info);
 		dev_info = NULL;
@@ -999,8 +999,8 @@ my_device_create(struct controlvm_message *inmsg)
 			spar_vhba_channel_protocol_uuid) == 0)
 		save_crash_message(inmsg, CRASH_DEV);
 
-	POSTCODE_LINUX_4(DEVICE_CREATE_EXIT_PC, dev_no, bus_no,
-			 POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(DEVICE_CREATE_EXIT_PC, dev_no, bus_no,
+		       POSTCODE_SEVERITY_INFO);
 out_respond:
 	device_epilog(dev_info, segment_state_running,
 		      CONTROLVM_DEVICE_CREATE, &inmsg->hdr, rc,
@@ -1019,12 +1019,12 @@ my_device_changestate(struct controlvm_message *inmsg)
 
 	dev_info = visorbus_get_device_by_id(bus_no, dev_no, NULL);
 	if (!dev_info) {
-		POSTCODE_LINUX_4(DEVICE_CHANGESTATE_FAILURE_PC, dev_no, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CHANGESTATE_FAILURE_PC, dev_no, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 		rc = -CONTROLVM_RESP_ERROR_DEVICE_INVALID;
 	} else if (dev_info->state.created == 0) {
-		POSTCODE_LINUX_4(DEVICE_CHANGESTATE_FAILURE_PC, dev_no, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CHANGESTATE_FAILURE_PC, dev_no, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 		rc = -CONTROLVM_RESP_ERROR_DEVICE_INVALID;
 	}
 	if ((rc >= CONTROLVM_RESP_SUCCESS) && dev_info)
