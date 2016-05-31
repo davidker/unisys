@@ -712,8 +712,8 @@ create_visor_device(struct visor_device *dev)
 	 */
 	err = device_add(&dev->device);
 	if (err < 0) {
-		POSTCODE_LINUX_3(DEVICE_ADD_PC, chipset_bus_no,
-				 DIAG_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_ADD_PC, 0, chipset_bus_no,
+			       DIAG_SEVERITY_ERR);
 		goto err_put;
 	}
 
@@ -1048,8 +1048,8 @@ create_bus_instance(struct visor_device *dev)
 	dev->device.release = visorbus_release_busdevice;
 
 	if (device_register(&dev->device) < 0) {
-		POSTCODE_LINUX_3(DEVICE_CREATE_FAILURE_PC, id,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, 0, id,
+			       POSTCODE_SEVERITY_ERR);
 		kfree(hdr_info);
 		return -ENODEV;
 	}
@@ -1137,16 +1137,16 @@ chipset_bus_create(struct visor_device *dev)
 	int rc;
 	u32 bus_no = dev->chipset_bus_no;
 
-	POSTCODE_LINUX_3(BUS_CREATE_ENTRY_PC, bus_no, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(BUS_CREATE_ENTRY_PC, 0, bus_no, POSTCODE_SEVERITY_INFO);
 	rc = create_bus_instance(dev);
-	POSTCODE_LINUX_3(BUS_CREATE_EXIT_PC, bus_no, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(BUS_CREATE_EXIT_PC, 0, bus_no, POSTCODE_SEVERITY_INFO);
 
 	if (rc < 0)
-		POSTCODE_LINUX_3(BUS_CREATE_FAILURE_PC, bus_no,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(BUS_CREATE_FAILURE_PC, 0, bus_no,
+			       POSTCODE_SEVERITY_ERR);
 	else
-		POSTCODE_LINUX_3(CHIPSET_INIT_SUCCESS_PC, bus_no,
-				 POSTCODE_SEVERITY_INFO);
+		POSTCODE_LINUX(CHIPSET_INIT_SUCCESS_PC, 0, bus_no,
+			       POSTCODE_SEVERITY_INFO);
 
 	bus_create_response(dev, rc);
 }
@@ -1342,7 +1342,7 @@ visorbus_init(void)
 {
 	int err;
 
-	POSTCODE_LINUX_3(DRIVER_ENTRY_PC, 0, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(DRIVER_ENTRY_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 	bus_device_info_init(&clientbus_driverinfo,
 			     "clientbus", "visorbus",
 			     VERSION, NULL);
@@ -1360,7 +1360,7 @@ visorbus_init(void)
 	return 0;
 
 error:
-	POSTCODE_LINUX_3(CHIPSET_INIT_FAILURE_PC, err, POSTCODE_SEVERITY_ERR);
+	POSTCODE_LINUX(CHIPSET_INIT_FAILURE_PC, 0, err, POSTCODE_SEVERITY_ERR);
 	return err;
 }
 
