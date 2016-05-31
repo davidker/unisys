@@ -523,13 +523,13 @@ chipset_init(struct controlvm_message *inmsg)
 	enum ultra_chipset_feature features = 0;
 	int rc = CONTROLVM_RESP_SUCCESS;
 
-	POSTCODE_LINUX_2(CHIPSET_INIT_ENTRY_PC, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(CHIPSET_INIT_ENTRY_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 	if (chipset_inited) {
 		rc = -CONTROLVM_RESP_ERROR_ALREADY_DONE;
 		goto out_respond;
 	}
 	chipset_inited = 1;
-	POSTCODE_LINUX_2(CHIPSET_INIT_EXIT_PC, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(CHIPSET_INIT_EXIT_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 
 	/*
 	 * Set features to indicate we support parahotplug (if Command
@@ -595,8 +595,8 @@ save_crash_message(struct controlvm_message *msg, enum crash_obj_type typ)
 			      offsetof(struct spar_controlvm_channel_protocol,
 				       saved_crash_message_count),
 			      &local_crash_msg_count, sizeof(u16)) < 0) {
-		POSTCODE_LINUX_2(CRASH_DEV_CTRL_RD_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_CTRL_RD_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 
@@ -611,8 +611,8 @@ save_crash_message(struct controlvm_message *msg, enum crash_obj_type typ)
 			      offsetof(struct spar_controlvm_channel_protocol,
 				       saved_crash_message_offset),
 			      &local_crash_msg_offset, sizeof(u32)) < 0) {
-		POSTCODE_LINUX_2(CRASH_DEV_CTRL_RD_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_CTRL_RD_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 
@@ -621,8 +621,8 @@ save_crash_message(struct controlvm_message *msg, enum crash_obj_type typ)
 				       local_crash_msg_offset,
 				       msg,
 				       sizeof(struct controlvm_message)) < 0) {
-			POSTCODE_LINUX_2(SAVE_MSG_BUS_FAILURE_PC,
-					 POSTCODE_SEVERITY_ERR);
+			POSTCODE_LINUX(SAVE_MSG_BUS_FAILURE_PC, 0, 0,
+				       POSTCODE_SEVERITY_ERR);
 			return;
 		}
 	} else {
@@ -631,8 +631,8 @@ save_crash_message(struct controlvm_message *msg, enum crash_obj_type typ)
 				       local_crash_msg_offset,
 				       msg,
 				       sizeof(struct controlvm_message)) < 0) {
-			POSTCODE_LINUX_2(SAVE_MSG_DEV_FAILURE_PC,
-					 POSTCODE_SEVERITY_ERR);
+			POSTCODE_LINUX(SAVE_MSG_DEV_FAILURE_PC, 0, 0,
+				       POSTCODE_SEVERITY_ERR);
 			return;
 		}
 	}
@@ -1113,16 +1113,16 @@ initialize_controlvm_payload(void)
 			      offsetof(struct spar_controlvm_channel_protocol,
 				       request_payload_offset),
 			      &payload_offset, sizeof(payload_offset)) < 0) {
-		POSTCODE_LINUX_2(CONTROLVM_INIT_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CONTROLVM_INIT_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 	if (visorchannel_read(controlvm_channel,
 			      offsetof(struct spar_controlvm_channel_protocol,
 				       request_payload_bytes),
 			      &payload_bytes, sizeof(payload_bytes)) < 0) {
-		POSTCODE_LINUX_2(CONTROLVM_INIT_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CONTROLVM_INIT_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 	initialize_controlvm_payload_info(phys_addr,
@@ -1542,7 +1542,7 @@ setup_crash_devices_work_queue(struct work_struct *work)
 	u32 local_crash_msg_offset;
 	u16 local_crash_msg_count;
 
-	POSTCODE_LINUX_2(CRASH_DEV_ENTRY_PC, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(CRASH_DEV_ENTRY_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 
 	/* send init chipset msg */
 	msg.hdr.id = CONTROLVM_CHIPSET_INIT;
@@ -1556,8 +1556,8 @@ setup_crash_devices_work_queue(struct work_struct *work)
 			      offsetof(struct spar_controlvm_channel_protocol,
 				       saved_crash_message_count),
 			      &local_crash_msg_count, sizeof(u16)) < 0) {
-		POSTCODE_LINUX_2(CRASH_DEV_CTRL_RD_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_CTRL_RD_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 
@@ -1573,8 +1573,8 @@ setup_crash_devices_work_queue(struct work_struct *work)
 			      offsetof(struct spar_controlvm_channel_protocol,
 				       saved_crash_message_offset),
 			      &local_crash_msg_offset, sizeof(u32)) < 0) {
-		POSTCODE_LINUX_2(CRASH_DEV_CTRL_RD_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_CTRL_RD_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 
@@ -1583,8 +1583,8 @@ setup_crash_devices_work_queue(struct work_struct *work)
 			      local_crash_msg_offset,
 			      &local_crash_bus_msg,
 			      sizeof(struct controlvm_message)) < 0) {
-		POSTCODE_LINUX_2(CRASH_DEV_RD_BUS_FAIULRE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_RD_BUS_FAIULRE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 
@@ -1594,8 +1594,8 @@ setup_crash_devices_work_queue(struct work_struct *work)
 			      sizeof(struct controlvm_message),
 			      &local_crash_dev_msg,
 			      sizeof(struct controlvm_message)) < 0) {
-		POSTCODE_LINUX_2(CRASH_DEV_RD_DEV_FAIULRE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_RD_DEV_FAIULRE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 
@@ -1603,8 +1603,8 @@ setup_crash_devices_work_queue(struct work_struct *work)
 	if (local_crash_bus_msg.cmd.create_bus.channel_addr) {
 		bus_create(&local_crash_bus_msg);
 	} else {
-		POSTCODE_LINUX_2(CRASH_DEV_BUS_NULL_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_BUS_NULL_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
 
@@ -1612,11 +1612,11 @@ setup_crash_devices_work_queue(struct work_struct *work)
 	if (local_crash_dev_msg.cmd.create_device.channel_addr) {
 		my_device_create(&local_crash_dev_msg);
 	} else {
-		POSTCODE_LINUX_2(CRASH_DEV_DEV_NULL_FAILURE_PC,
-				 POSTCODE_SEVERITY_ERR);
+		POSTCODE_LINUX(CRASH_DEV_DEV_NULL_FAILURE_PC, 0, 0,
+			       POSTCODE_SEVERITY_ERR);
 		return;
 	}
-	POSTCODE_LINUX_2(CRASH_DEV_EXIT_PC, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(CRASH_DEV_EXIT_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 }
 
 void
@@ -2154,11 +2154,12 @@ visorchipset_init(struct acpi_device *acpi_device)
 
 	visorchipset_platform_device.dev.devt = major_dev;
 	if (platform_device_register(&visorchipset_platform_device) < 0) {
-		POSTCODE_LINUX_2(DEVICE_REGISTER_FAILURE_PC, DIAG_SEVERITY_ERR);
+		POSTCODE_LINUX(DEVICE_REGISTER_FAILURE_PC, 0, 0,
+			       DIAG_SEVERITY_ERR);
 		err = -ENODEV;
 		goto error_cancel_work;
 	}
-	POSTCODE_LINUX_2(CHIPSET_INIT_SUCCESS_PC, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(CHIPSET_INIT_SUCCESS_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 
 	err = visorbus_init();
 	if (err < 0)
@@ -2187,7 +2188,7 @@ error:
 static int
 visorchipset_exit(struct acpi_device *acpi_device)
 {
-	POSTCODE_LINUX_2(DRIVER_EXIT_PC, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(DRIVER_EXIT_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 
 	visorbus_exit();
 
@@ -2198,7 +2199,7 @@ visorchipset_exit(struct acpi_device *acpi_device)
 
 	visorchipset_file_cleanup(visorchipset_platform_device.dev.devt);
 	platform_device_unregister(&visorchipset_platform_device);
-	POSTCODE_LINUX_2(DRIVER_EXIT_PC, POSTCODE_SEVERITY_INFO);
+	POSTCODE_LINUX(DRIVER_EXIT_PC, 0, 0, POSTCODE_SEVERITY_INFO);
 
 	return 0;
 }
