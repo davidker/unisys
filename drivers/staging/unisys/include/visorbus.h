@@ -247,6 +247,9 @@ enum event_pc {			/* POSTCODE event identifier tuples */
 	SAVE_MSG_DEV_FAILURE_PC = 0x01F,
 };
 
+void visorbus_log_postcode(enum driver_pc file, enum event_pc event, u16 line,
+			   u16 info_high, u16 info_low,
+			   enum diag_severity severity);
 bool visorchannel_signalremove(struct visorchannel *channel, u32 queue,
 			       void *msg);
 bool visorchannel_signalinsert(struct visorchannel *channel, u32 queue,
