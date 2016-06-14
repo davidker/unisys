@@ -648,6 +648,8 @@ static struct scsi_host_template visorhba_driver_template = {
 static int info_debugfs_show(struct seq_file *seq, void *v)
 {
 	struct visorhba_devdata *devdata = seq->private;
+	struct visordisk_info *vdisk;
+	struct scsi_device *scsidev;
 
 	seq_printf(seq, "max_buff_len = %u\n", devdata->max_buff_len);
 	seq_printf(seq, "interrupts_rcvd = %llu\n", devdata->interrupts_rcvd);
@@ -666,6 +668,17 @@ static int info_debugfs_show(struct seq_file *seq, void *v)
 	}
 	seq_printf(seq, "acquire_failed_cnt = %llu\n",
 		   devdata->acquire_failed_cnt);
+	shost_for_each_device(scsidev, devdata->scsihost) {
+		vdisk = scsidev->hostdata;
+		seq_printf(seq, "\tabort_count = %d\n",
+			   atomic_read(&vdisk->abort_count));
+		seq_printf(seq, "\tdevice_reset_count = %d\n",
+			   atomic_read(&vdisk->device_reset_count));
+		seq_printf(seq, "\tbus_reset_count = %d\n",
+			   atomic_read(&vdisk->bus_reset_count));
+		seq_printf(seq, "\tcommand_error_count = %d\n",
+			   atomic_read(&vdisk->command_error_count));
+	}
 
 	return 0;
 }
