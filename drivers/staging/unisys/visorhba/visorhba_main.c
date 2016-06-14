@@ -17,11 +17,7 @@
 
 #include "iochannel.h"
 
-/* The Send and Receive Buffers of the IO Queue may both be full */
-
-#define IOS_ERROR_THRESHOLD  1000
 #define MAX_PENDING_REQUESTS (MIN_NUMSIGNALS * 2)
-#define VISORHBA_ERROR_COUNT 30
 
 static struct dentry *visorhba_debugfs_dir;
 
@@ -41,7 +37,6 @@ MODULE_ALIAS("visorbus:" VISOR_VHBA_CHANNEL_GUID_STR);
 struct visordisk_info {
 	struct scsi_device *sdev;
 	u32 valid;
-	atomic_t ios_threshold;
 	atomic_t error_count;
 	struct visordisk_info *next;
 };
@@ -374,10 +369,7 @@ static int visorhba_abort_handler(struct scsi_cmnd *scsicmd)
 
 	scsidev = scsicmd->device;
 	vdisk = scsidev->hostdata;
-	if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
-		atomic_inc(&vdisk->error_count);
-	else
-		atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
+	atomic_inc(&vdisk->error_count);
 	rtn = forward_taskmgmt_command(TASK_MGMT_ABORT_TASK, scsidev);
 	if (rtn == SUCCESS) {
 		scsicmd->result = DID_ABORT << 16;
@@ -401,10 +393,7 @@ static int visorhba_device_reset_handler(struct scsi_cmnd *scsicmd)
 
 	scsidev = scsicmd->device;
 	vdisk = scsidev->hostdata;
-	if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
-		atomic_inc(&vdisk->error_count);
-	else
-		atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
+	atomic_inc(&vdisk->error_count);
 	rtn = forward_taskmgmt_command(TASK_MGMT_LUN_RESET, scsidev);
 	if (rtn == SUCCESS) {
 		scsicmd->result = DID_RESET << 16;
@@ -429,10 +418,7 @@ static int visorhba_bus_reset_handler(struct scsi_cmnd *scsicmd)
 	scsidev = scsicmd->device;
 	shost_for_each_device(scsidev, scsidev->host) {
 		vdisk = scsidev->hostdata;
-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
-			atomic_inc(&vdisk->error_count);
-		else
-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
+		atomic_inc(&vdisk->error_count);
 	}
 	rtn = forward_taskmgmt_command(TASK_MGMT_BUS_RESET, scsidev);
 	if (rtn == SUCCESS) {
@@ -803,10 +789,7 @@ static void do_scsi_linuxstat(struct uiscmdrsp *cmdrsp,
 		return;
 	/* Okay see what our error_count is here.... */
 	vdisk = scsidev->hostdata;
-	if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT) {
-		atomic_inc(&vdisk->error_count);
-		atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
-	}
+	atomic_inc(&vdisk->error_count);
 }
 
 static int set_no_disk_inquiry_result(unsigned char *buf, size_t len,
@@ -844,7 +827,6 @@ static void do_scsi_nolinuxstat(struct uiscmdrsp *cmdrsp,
 	char *this_page;
 	char *this_page_orig;
 	int bufind = 0;
-	struct visordisk_info *vdisk;
 
 	scsidev = scsicmd->device;
 	if (cmdrsp->scsi.cmnd[0] == INQUIRY &&
@@ -879,13 +861,6 @@ static void do_scsi_nolinuxstat(struct uiscmdrsp *cmdrsp,
 			kunmap_atomic(this_page_orig);
 		}
 		kfree(buf);
-	} else {
-		vdisk = scsidev->hostdata;
-		if (atomic_read(&vdisk->ios_threshold) > 0) {
-			atomic_dec(&vdisk->ios_threshold);
-			if (atomic_read(&vdisk->ios_threshold) == 0)
-				atomic_set(&vdisk->error_count, 0);
-		}
 	}
 }
 
