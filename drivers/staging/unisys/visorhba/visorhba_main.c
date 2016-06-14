@@ -46,7 +46,10 @@ MODULE_ALIAS("visorbus:" SPAR_VHBA_CHANNEL_PROTOCOL_UUID_STR);
 struct visordisk_info {
 	u32 valid;
 	u32 channel, id, lun;	/* Disk Path */
-	atomic_t error_count;
+	atomic_t abort_count;
+	atomic_t device_reset_count;
+	atomic_t bus_reset_count;
+	atomic_t command_error_count;
 	struct visordisk_info *next;
 };
 
@@ -376,7 +379,7 @@ static int visorhba_abort_handler(struct scsi_cmnd *scsicmd)
 	scsidev = scsicmd->device;
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
 	for_each_vdisk_match(vdisk, devdata, scsidev)
-		atomic_inc(&vdisk->error_count);
+		atomic_inc(&vdisk->abort_count);
 	return forward_taskmgmt_command(TASK_MGMT_ABORT_TASK, scsicmd);
 }
 
@@ -396,7 +399,7 @@ static int visorhba_device_reset_handler(struct scsi_cmnd *scsicmd)
 	scsidev = scsicmd->device;
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
 	for_each_vdisk_match(vdisk, devdata, scsidev)
-		atomic_inc(&vdisk->error_count);
+		atomic_inc(&vdisk->device_reset_count);
 	return forward_taskmgmt_command(TASK_MGMT_LUN_RESET, scsicmd);
 }
 
@@ -416,7 +419,7 @@ static int visorhba_bus_reset_handler(struct scsi_cmnd *scsicmd)
 	scsidev = scsicmd->device;
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
 	for_each_vdisk_match(vdisk, devdata, scsidev)
-		atomic_inc(&vdisk->error_count);
+		atomic_inc(&vdisk->bus_reset_count);
 	return forward_taskmgmt_command(TASK_MGMT_BUS_RESET, scsicmd);
 }
 
@@ -784,7 +787,7 @@ do_scsi_linuxstat(struct uiscmdrsp *cmdrsp, struct scsi_cmnd *scsicmd)
 	/* Okay see what our error_count is here.... */
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
 	for_each_vdisk_match(vdisk, devdata, scsidev)
-		atomic_inc(&vdisk->error_count);
+		atomic_inc(&vdisk->command_error_count);
 }
 
 static int set_no_disk_inquiry_result(unsigned char *buf,
