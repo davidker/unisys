@@ -26,11 +26,7 @@
 #include "visorbus.h"
 #include "iochannel.h"
 
-/* The Send and Receive Buffers of the IO Queue may both be full */
-
-#define IOS_ERROR_THRESHOLD	1000
 #define MAX_PENDING_REQUESTS	(MIN_NUMSIGNALS * 2)
-#define VISORHBA_ERROR_COUNT	30
 
 
 static struct dentry *visorhba_debugfs_dir;
@@ -50,7 +46,6 @@ MODULE_ALIAS("visorbus:" SPAR_VHBA_CHANNEL_PROTOCOL_UUID_STR);
 struct visordisk_info {
 	u32 valid;
 	u32 channel, id, lun;	/* Disk Path */
-	atomic_t ios_threshold;
 	atomic_t error_count;
 	struct visordisk_info *next;
 };
@@ -380,12 +375,8 @@ static int visorhba_abort_handler(struct scsi_cmnd *scsicmd)
 
 	scsidev = scsicmd->device;
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
-	for_each_vdisk_match(vdisk, devdata, scsidev) {
-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
-			atomic_inc(&vdisk->error_count);
-		else
-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
-	}
+	for_each_vdisk_match(vdisk, devdata, scsidev)
+		atomic_inc(&vdisk->error_count);
 	return forward_taskmgmt_command(TASK_MGMT_ABORT_TASK, scsicmd);
 }
 
@@ -404,12 +395,8 @@ static int visorhba_device_reset_handler(struct scsi_cmnd *scsicmd)
 
 	scsidev = scsicmd->device;
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
-	for_each_vdisk_match(vdisk, devdata, scsidev) {
-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
-			atomic_inc(&vdisk->error_count);
-		else
-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
-	}
+	for_each_vdisk_match(vdisk, devdata, scsidev)
+		atomic_inc(&vdisk->error_count);
 	return forward_taskmgmt_command(TASK_MGMT_LUN_RESET, scsicmd);
 }
 
@@ -428,12 +415,8 @@ static int visorhba_bus_reset_handler(struct scsi_cmnd *scsicmd)
 
 	scsidev = scsicmd->device;
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
-	for_each_vdisk_match(vdisk, devdata, scsidev) {
-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
-			atomic_inc(&vdisk->error_count);
-		else
-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
-	}
+	for_each_vdisk_match(vdisk, devdata, scsidev)
+		atomic_inc(&vdisk->error_count);
 	return forward_taskmgmt_command(TASK_MGMT_BUS_RESET, scsicmd);
 }
 
@@ -800,12 +783,8 @@ do_scsi_linuxstat(struct uiscmdrsp *cmdrsp, struct scsi_cmnd *scsicmd)
 		return;
 	/* Okay see what our error_count is here.... */
 	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
-	for_each_vdisk_match(vdisk, devdata, scsidev) {
-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT) {
-			atomic_inc(&vdisk->error_count);
-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
-		}
-	}
+	for_each_vdisk_match(vdisk, devdata, scsidev)
+		atomic_inc(&vdisk->error_count);
 }
 
 static int set_no_disk_inquiry_result(unsigned char *buf,
@@ -844,8 +823,6 @@ do_scsi_nolinuxstat(struct uiscmdrsp *cmdrsp, struct scsi_cmnd *scsicmd)
 	char *this_page;
 	char *this_page_orig;
 	int bufind = 0;
-	struct visordisk_info *vdisk;
-	struct visorhba_devdata *devdata;
 
 	scsidev = scsicmd->device;
 	if ((cmdrsp->scsi.cmnd[0] == INQUIRY) &&
@@ -874,15 +851,6 @@ do_scsi_nolinuxstat(struct uiscmdrsp *cmdrsp, struct scsi_cmnd *scsicmd)
 					     sg[i].offset);
 			memcpy(this_page, buf + bufind, sg[i].length);
 			kunmap_atomic(this_page_orig);
-		}
-	} else {
-		devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
-		for_each_vdisk_match(vdisk, devdata, scsidev) {
-			if (atomic_read(&vdisk->ios_threshold) > 0) {
-				atomic_dec(&vdisk->ios_threshold);
-				if (atomic_read(&vdisk->ios_threshold) == 0)
-					atomic_set(&vdisk->error_count, 0);
-			}
 		}
 	}
 }
