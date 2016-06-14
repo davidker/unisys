@@ -100,11 +100,15 @@ struct visorhba_devices_open {
 	struct visorhba_devdata *devdata;
 };
 
+#define for_each_vdisk(iter, list)			  \
+	for (iter = &list->head; iter->next; iter = iter->next)
+
 #define for_each_vdisk_match(iter, list, match)			  \
-	for (iter = &list->head; iter->next; iter = iter->next) \
+	for_each_vdisk(iter, list)			\
 		if ((iter->channel == match->channel) &&		  \
 		    (iter->id == match->id) &&			  \
 		    (iter->lun == match->lun))
+
 /**
  *	visor_thread_start - starts a thread for the device
  *	@threadfn: Function the thread starts
@@ -628,6 +632,7 @@ static struct scsi_host_template visorhba_driver_template = {
 static int info_debugfs_show(struct seq_file *seq, void *v)
 {
 	struct visorhba_devdata *devdata = seq->private;
+	struct visordisk_info *vdisk;
 
 	seq_printf(seq, "max_buff_len = %u\n", devdata->max_buff_len);
 	seq_printf(seq, "interrupts_rcvd = %llu\n", devdata->interrupts_rcvd);
@@ -646,6 +651,18 @@ static int info_debugfs_show(struct seq_file *seq, void *v)
 	}
 	seq_printf(seq, "acquire_failed_cnt = %llu\n",
 		   devdata->acquire_failed_cnt);
+	for_each_vdisk(vdisk, devdata) {
+		seq_printf(seq, "disk %u:%u:%u\n",
+			   vdisk->channel, vdisk->id, vdisk->lun);
+		seq_printf(seq, "\tabort_count = %d\n",
+			   atomic_read(&vdisk->abort_count));
+		seq_printf(seq, "\tdevice_reset_count = %d\n",
+			   atomic_read(&vdisk->device_reset_count));
+		seq_printf(seq, "\tbus_reset_count = %d\n",
+			   atomic_read(&vdisk->bus_reset_count));
+		seq_printf(seq, "\tcommand_error_count = %d\n",
+			   atomic_read(&vdisk->command_error_count));
+	}
 
 	return 0;
 }
