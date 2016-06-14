@@ -79,6 +79,7 @@ struct visorhba_devdata {
 	int devnum;
 	struct task_struct *thread;
 	int thread_wait_ms;
+	atomic_t busy_count;
 
 	/*
 	 * allows us to pass int handles back-and-forth between us and
@@ -154,6 +155,7 @@ static int add_scsipending_entry(struct visorhba_devdata *devdata,
 		insert_location = (insert_location + 1) % MAX_PENDING_REQUESTS;
 		if (insert_location == (int)devdata->nextinsert) {
 			spin_unlock_irqrestore(&devdata->privlock, flags);
+			atomic_inc(&devdata->busy_count);
 			return -EBUSY;
 		}
 	}
@@ -668,6 +670,8 @@ static int info_debugfs_show(struct seq_file *seq, void *v)
 	}
 	seq_printf(seq, "acquire_failed_cnt = %llu\n",
 		   devdata->acquire_failed_cnt);
+	seq_printf(seq, "busy_count = %d\n",
+		   atomic_read(&devdata->busy_count));
 	shost_for_each_device(scsidev, devdata->scsihost) {
 		vdisk = scsidev->hostdata;
 		seq_printf(seq, "\tabort_count = %d\n",
