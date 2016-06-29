@@ -31,7 +31,6 @@
 
 #include <linux/uuid.h>
 
-#include <linux/dma-direction.h>
 #include "channel.h"
 
 #define ULTRA_VHBA_CHANNEL_PROTOCOL_SIGNATURE ULTRA_CHANNEL_PROTOCOL_SIGNATURE
@@ -79,6 +78,14 @@
 
 /* Size of cdb - i.e., SCSI cmnd */
 #define MAX_CMND_SIZE 16
+
+/* Unisys-specific DMA direction values */
+enum uis_dma_data_direction {
+	UIS_DMA_BIDIRECTIONAL = 0,
+	UIS_DMA_TO_DEVICE,
+	UIS_DMA_FROM_DEVICE,
+	UIS_DMA_NONE
+};
 
 #define MAX_SENSE_SIZE 64
 
@@ -192,7 +199,7 @@ struct uiscmdrsp_scsi {
 							 * information for each
 							 * fragment
 							 */
-	enum dma_data_direction data_dir; /* direction of the data, if any */
+	enum uis_dma_data_direction data_dir; /* direction of the data */
 	struct uisscsi_dest vdest;	/* identifies the virtual hba, id, */
 					/* channel, lun to which cmd was sent */
 
