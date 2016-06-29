@@ -71,7 +71,6 @@ struct visorhba_devdata {
 	unsigned long long interrupts_notme;
 	unsigned long long interrupts_disabled;
 	u64 __iomem *flags_addr;
-	atomic_t interrupt_rcvd;
 	wait_queue_head_t rsp_queue;
 	struct visordisk_info head;
 	unsigned int max_buff_len;
