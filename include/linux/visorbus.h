@@ -64,6 +64,9 @@ enum channel_clientstate {
 #define VISOR_IOVM_OK_DRIVER_DISABLING_INTS (0x1ULL << 4)
 #define VISOR_DRIVER_DISABLES_INTS (0x1ULL << 5)
 #define VISOR_DRIVER_ENHANCED_RCVBUF_CHECKING (0x1ULL << 6)
+/* bit 7 is reserved */
+#define VISOR_IOVM_SUPPORTS_ALIGNED_IOCHANNEL_STRUCTS (0x1ULL << 8)
+#define VISOR_DRIVER_ALIGNED_STRUCTS (0x1ULL << 9)
 
 /*
  * struct channel_header - Common Channel Header
@@ -343,6 +346,9 @@ void visorbus_rearm_channel_interrupts(struct visor_device *dev);
 int visorbus_register_for_channel_interrupts(struct visor_device *dev,
 					     u32 queue);
 void visorbus_unregister_for_channel_interrupts(struct visor_device *dev);
+int visorbus_get_channel_features(struct visor_device *dev, u64 *feature_bits);
+int visorbus_set_channel_features(struct visor_device *dev, u64 feature_bits);
+int visorbus_clear_channel_features(struct visor_device *dev, u64 feature_bits);
 
 int visorchannel_signalremove(struct visorchannel *channel, u32 queue,
 			      void *msg);
