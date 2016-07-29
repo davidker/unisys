@@ -339,7 +339,7 @@ struct net_pkt_rcvpost {
 	    /* the Adapter which we sent them originally. */
 } __packed;
 
-struct net_pkt_rcv {
+struct net_pkt_rcv_unaligned {
 	/* the number of receive buffers that can be chained  */
 	/* is based on max mtu and size of each rcv buf */
 	u32 rcv_done_len;	/* length of received data */
@@ -351,6 +351,16 @@ struct net_pkt_rcv {
 	u64 unique_num;
 	u32 rcvs_dropped_delta;
 } __packed;
+
+struct net_pkt_rcv {
+	u64 unique_num;
+	void *rcvbuf[MAX_NET_RCV_CHAIN];	/* list of chained rcvbufs */
+	u32 rcv_done_len;	/* length of received data */
+	u32 rcvs_dropped_delta;
+	u8 numrcvbufs;		/* number of receive buffers that contain the */
+} __packed;
+
+
 
 struct net_pkt_enbdis {
 	void *context;
@@ -371,6 +381,7 @@ struct uiscmdrsp_net {
 		struct net_pkt_xmtdone xmtdone;	/* used for NET_XMIT_DONE */
 		struct net_pkt_rcvpost rcvpost;	/* used for NET_RCV_POST */
 		struct net_pkt_rcv rcv;		/* used for NET_RCV */
+		struct net_pkt_rcv_unaligned rcv_unaligned;
 		struct net_pkt_enbdis enbdis;	/* used for NET_RCV_ENBDIS, */
 						/* NET_RCV_ENBDIS_ACK,  */
 						/* NET_RCV_PROMSIC, */

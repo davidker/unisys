@@ -754,6 +754,82 @@ visorbus_disable_channel_interrupts(struct visor_device *dev)
 }
 EXPORT_SYMBOL_GPL(visorbus_disable_channel_interrupts);
 
+int visorbus_get_channel_features(struct visor_device *dev, u64 *feature_bits)
+{
+	int channel_offset = 0, err = 0;
+
+	channel_offset = offsetof(struct channel_header,
+				  features);
+	err = visorbus_read_channel(dev, channel_offset, feature_bits, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+
+	return err;
+}
+EXPORT_SYMBOL_GPL(visorbus_get_channel_features);
+
+int visorbus_set_channel_features(struct visor_device *dev, u64 feature_bits)
+{
+	int channel_offset = 0, err = 0;
+	u64 features;
+
+	channel_offset = offsetof(struct channel_header,
+				  features);
+	err = visorbus_read_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+
+	features |= (feature_bits);
+
+	err = visorbus_write_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+	return err;
+}
+EXPORT_SYMBOL_GPL(visorbus_set_channel_features);
+
+int visorbus_clear_channel_features(struct visor_device *dev, u64 feature_bits)
+{
+	int channel_offset = 0, err = 0;
+	u64 features, mask;
+
+	channel_offset = offsetof(struct channel_header,
+				  features);
+	err = visorbus_read_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+
+	mask = ~(feature_bits);
+	features &= mask;
+
+	err = visorbus_write_channel(dev, channel_offset, &features, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+	return err;
+}
+EXPORT_SYMBOL_GPL(visorbus_clear_channel_features);
+
+
 /** This is how everything starts from the device end.
  *  This function is called when a channel first appears via a ControlVM
  *  message.  In response, this function allocates a visor_device to
