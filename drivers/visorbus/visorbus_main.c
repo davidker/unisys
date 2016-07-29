@@ -605,11 +605,6 @@ int visorbus_write_channel(struct visor_device *dev, unsigned long offset,
 }
 EXPORT_SYMBOL_GPL(visorbus_write_channel);
 
-static int visorbus_set_channel_features(struct visor_device *dev,
-					 u64 feature_bits);
-static int visorbus_clear_channel_features(struct visor_device *dev,
-					   u64 feature_bits);
-
 /*
  * visorbus_enable_channel_interrupts() - enables interrupts on the
  *                                        designated device
@@ -726,8 +721,7 @@ visorbus_isr(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-static int visorbus_set_channel_features(struct visor_device *dev,
-					 u64 feature_bits)
+int visorbus_set_channel_features(struct visor_device *dev, u64 feature_bits)
 {
 	int channel_offset = 0, err = 0;
 	u64 features;
@@ -753,9 +747,27 @@ static int visorbus_set_channel_features(struct visor_device *dev,
 	}
 	return err;
 }
+EXPORT_SYMBOL_GPL(visorbus_set_channel_features);
 
-static int visorbus_clear_channel_features(struct visor_device *dev,
-					   u64 feature_bits)
+int visorbus_get_channel_features(struct visor_device *dev, u64 *feature_bits)
+{
+	int channel_offset = 0, err = 0;
+
+	channel_offset = offsetof(struct channel_header,
+				  features);
+	err = visorbus_read_channel(dev, channel_offset, feature_bits, 8);
+	if (err) {
+		dev_err(&dev->device,
+			"%s failed to get features from chan (%d)\n",
+			__func__, err);
+		return err;
+	}
+
+	return err;
+}
+EXPORT_SYMBOL_GPL(visorbus_get_channel_features);
+
+int visorbus_clear_channel_features(struct visor_device *dev, u64 feature_bits)
 {
 	int channel_offset = 0, err = 0;
 	u64 features, mask;
@@ -782,6 +794,7 @@ static int visorbus_clear_channel_features(struct visor_device *dev,
 	}
 	return err;
 }
+EXPORT_SYMBOL_GPL(visorbus_clear_channel_features);
 
 /*
  * visorbus_register_for_channel_interrupts(struct visor_device *dev,
