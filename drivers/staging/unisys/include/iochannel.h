@@ -389,26 +389,34 @@ struct net_pkt_rcvpost {
 
 } __packed;
 
-/*
- * struct net_pkt_rcv
- * @rcv_done_len:	Length of the received data.
- * @numrcvbufs:		Contains the incoming data. Guest side MUST chain these
- *			together.
- * @*rcvbuf:		List of chained rcvbufa. Each entry is a receive buffer
- *			provided by NET_RCV_POST. NOTE: First rcvbuf in the
- *			chain will also be provided in net.buf.
- * @unique_num:
- * @rcvs_dropped_delta:
- *
- * The number of rcvbuf that can be chained is based on max mtu and size of each
- * rcvbuf.
- */
-struct net_pkt_rcv {
+struct net_pkt_rcv_unaligned {
 	u32 rcv_done_len;
 	u8 numrcvbufs;
 	void *rcvbuf[MAX_NET_RCV_CHAIN];
 	u64 unique_num;
 	u32 rcvs_dropped_delta;
+} __packed;
+
+/*
+ * struct net_pkt_rcv
+ * @rcv_done_len:	Length of the received data.
+ * @*rcvbuf:		List of chained rcvbufa. Each entry is a receive buffer
+ *			provided by NET_RCV_POST. NOTE: First rcvbuf in the
+ *			chain will also be provided in net.buf.
+ * @unique_num:
+ * @rcvs_dropped_delta:
+ * @numrcvbufs:		Contains the incoming data. Guest side MUST chain these
+ *			together.
+ *
+ * The number of rcvbuf that can be chained is based on max mtu and size of each
+ * rcvbuf.
+ */
+struct net_pkt_rcv {
+	u64 unique_num;
+	void *rcvbuf[MAX_NET_RCV_CHAIN];
+	u32 rcv_done_len;
+	u32 rcvs_dropped_delta;
+	u8 numrcvbufs;
 } __packed;
 
 struct net_pkt_enbdis {
@@ -444,6 +452,7 @@ struct uiscmdrsp_net {
 		struct net_pkt_xmtdone xmtdone;
 		struct net_pkt_rcvpost rcvpost;
 		struct net_pkt_rcv rcv;
+		struct net_pkt_rcv_unaligned rcv_unaligned;
 		struct net_pkt_enbdis enbdis;
 		struct net_pkt_macaddr macaddr;
 	};
