@@ -1103,6 +1103,12 @@ static void visornic_xmit_timeout(struct net_device *netdev)
 	spin_unlock_irqrestore(&devdata->priv_lock, flags);
 }
 
+static bool is_visor_using_aligned_structs(u64 features)
+{
+	return  (features & VISOR_IOVM_SUPPORTS_ALIGNED_IOCHANNEL_STRUCTS) &&
+		(features & VISOR_DRIVER_ALIGNED_STRUCTS);
+}
+
 /* repost_return - repost rcv bufs that have come back
  * @cmdrsp: IO channel command struct to post.
  * @devdata: Visornic devdata for the device.
@@ -1118,13 +1124,28 @@ static int repost_return(struct uiscmdrsp *cmdrsp,
 			 struct visornic_devdata *devdata,
 			 struct sk_buff *skb, struct net_device *netdev)
 {
-	struct net_pkt_rcv copy;
+	struct uiscmdrsp_net copy;
 	int i = 0, cc, numreposted;
 	int found_skb = 0;
 	int status = 0;
+	u64 features;
+	u32 rcv_done_len;
+	u32 numrcvbufs;
+	void **rcvbuf;
 
-	copy = cmdrsp->net.rcv;
-	switch (copy.numrcvbufs) {
+	copy = cmdrsp->net;
+	visorbus_get_channel_features(devdata->dev, &features);
+	if (is_visor_using_aligned_structs(features)) {
+		rcv_done_len = copy.rcv.rcv_done_len;
+		numrcvbufs = copy.rcv.numrcvbufs;
+		rcvbuf = copy.rcv.rcvbuf;
+	} else {
+		rcv_done_len = copy.rcv_unaligned.rcv_done_len;
+		numrcvbufs = copy.rcv_unaligned.numrcvbufs;
+		rcvbuf = copy.rcv_unaligned.rcvbuf;
+	}
+
+	switch (numrcvbufs) {
 	case 0:
 		devdata->n_rcv0++;
 		break;
@@ -1138,9 +1159,9 @@ static int repost_return(struct uiscmdrsp *cmdrsp,
 		devdata->n_rcvx++;
 		break;
 	}
-	for (cc = 0, numreposted = 0; cc < copy.numrcvbufs; cc++) {
+	for (cc = 0, numreposted = 0; cc < numrcvbufs; cc++) {
 		for (i = 0; i < devdata->num_rcv_bufs; i++) {
-			if (devdata->rcvbuf[i] != copy.rcvbuf[cc])
+			if (devdata->rcvbuf[i] != rcvbuf[cc])
 				continue;
 
 			if ((skb) && devdata->rcvbuf[i] == skb) {
@@ -1165,7 +1186,7 @@ static int repost_return(struct uiscmdrsp *cmdrsp,
 			break;
 		}
 	}
-	if (numreposted != copy.numrcvbufs) {
+	if (numreposted != numrcvbufs) {
 		devdata->n_repost_deficit++;
 		status = -EINVAL;
 	}
@@ -1196,6 +1217,10 @@ static int visornic_rx(struct uiscmdrsp *cmdrsp)
 	int cc, currsize, off;
 	struct ethhdr *eth;
 	unsigned long flags;
+	u64 features;
+	u32 rcv_done_len;
+	u32 numrcvbufs;
+	void **rcvbuf;
 
 	/* post new rcv buf to the other end using the cmdrsp we have at hand
 	 * post it without holding lock - but we'll use the signal lock to
@@ -1210,10 +1235,21 @@ static int visornic_rx(struct uiscmdrsp *cmdrsp)
 	spin_lock_irqsave(&devdata->priv_lock, flags);
 	atomic_dec(&devdata->num_rcvbuf_in_iovm);
 
+	visorbus_get_channel_features(devdata->dev, &features);
+	if (is_visor_using_aligned_structs(features)) {
+		rcv_done_len = cmdrsp->net.rcv.rcv_done_len;
+		numrcvbufs = cmdrsp->net.rcv.numrcvbufs;
+		rcvbuf = cmdrsp->net.rcv.rcvbuf;
+	} else {
+		rcv_done_len = cmdrsp->net.rcv_unaligned.rcv_done_len;
+		numrcvbufs = cmdrsp->net.rcv_unaligned.numrcvbufs;
+		rcvbuf = cmdrsp->net.rcv_unaligned.rcvbuf;
+	}
+
 	/* set length to how much was ACTUALLY received. NOTE: rcv_done_len
 	 * includes actual length of data rcvd including ethhdr
 	 */
-	skb->len = cmdrsp->net.rcv.rcv_done_len;
+	skb->len = rcv_done_len;
 
 	/* update rcv stats - call it with priv_lock held */
 	devdata->net_stats.rx_packets++;
@@ -1241,7 +1277,7 @@ static int visornic_rx(struct uiscmdrsp *cmdrsp)
 	 */
 	/* do PRECAUTIONARY check */
 	if (skb->len > RCVPOST_BUF_SIZE) {
-		if (cmdrsp->net.rcv.numrcvbufs < 2) {
+		if (numrcvbufs < 2) {
 			if (repost_return(cmdrsp, devdata, skb, netdev) < 0)
 				dev_err(&devdata->netdev->dev,
 					"repost_return failed");
@@ -1257,7 +1293,7 @@ static int visornic_rx(struct uiscmdrsp *cmdrsp)
 		/* data fits in this skb - no chaining - do PRECAUTIONARY check
 		 * should be 1
 		 */
-		if (cmdrsp->net.rcv.numrcvbufs != 1) {
+		if (numrcvbufs != 1) {
 			if (repost_return(cmdrsp, devdata, skb, netdev) < 0)
 				dev_err(&devdata->netdev->dev,
 					"repost_return failed");
@@ -1276,19 +1312,18 @@ static int visornic_rx(struct uiscmdrsp *cmdrsp)
 	 * cmdrsp->net.rcv.skb; we need to chain the rest to that one.
 	 * - do PRECAUTIONARY check
 	 */
-	if (cmdrsp->net.rcv.rcvbuf[0] != skb) {
+	if (rcvbuf[0] != skb) {
 		if (repost_return(cmdrsp, devdata, skb, netdev) < 0)
 			dev_err(&devdata->netdev->dev, "repost_return failed");
 		return 0;
 	}
 
-	if (cmdrsp->net.rcv.numrcvbufs > 1) {
+	if (numrcvbufs > 1) {
 		/* chain the various rcv buffers into the skb's frag_list.
 		 * Note: off was initialized above
 		 */
-		for (cc = 1, prev = NULL;
-		     cc < cmdrsp->net.rcv.numrcvbufs; cc++) {
-			curr = (struct sk_buff *)cmdrsp->net.rcv.rcvbuf[cc];
+		for (cc = 1, prev = NULL; cc < numrcvbufs; cc++) {
+			curr = (struct sk_buff *)rcvbuf[cc];
 			curr->next = NULL;
 			/* start of list- set head */
 			if (!prev)
@@ -1886,6 +1921,7 @@ static int visornic_probe(struct visor_device *dev)
 	}
 
 	features |= VISOR_DRIVER_ENHANCED_RCVBUF_CHECKING;
+	features |= VISOR_DRIVER_ALIGNED_STRUCTS;
 	err = visorbus_write_channel(dev, channel_offset, &features, 8);
 	if (err) {
 		dev_err(&dev->device,
@@ -1903,6 +1939,8 @@ static int visornic_probe(struct visor_device *dev)
 	 */
 	visorbus_register_for_channel_interrupts(dev, IOCHAN_FROM_IOPART);
 	visorbus_enable_channel_interrupts(dev);
+
+	visorbus_set_channel_features(dev, VISOR_DRIVER_ALIGNED_STRUCTS);
 
 	err = register_netdev(netdev);
 	if (err) {
