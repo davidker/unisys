@@ -181,6 +181,9 @@ int visorbus_write_channel(struct visor_device *dev,
 			   unsigned long nbytes);
 int visorbus_enable_channel_interrupts(struct visor_device *dev);
 void visorbus_disable_channel_interrupts(struct visor_device *dev);
+int visorbus_get_channel_features(struct visor_device *dev, u64 *feature_bits);
+int visorbus_set_channel_features(struct visor_device *dev, u64 feature_bits);
+int visorbus_clear_channel_features(struct visor_device *dev, u64 feature_bits);
 
 /*
  * Levels of severity for diagnostic events, in order from lowest severity to
