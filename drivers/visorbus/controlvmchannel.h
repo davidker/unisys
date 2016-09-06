@@ -587,63 +587,51 @@ struct visor_controlvm_parameters_header {
 	u32 reserved;
 } __packed;
 
-/* General Errors------------------------------------------------------[0-99] */
+/* General Errors [0-99] */
 #define CONTROLVM_RESP_SUCCESS			   0
 #define CONTROLVM_RESP_ALREADY_DONE		   1
 #define CONTROLVM_RESP_IOREMAP_FAILED		   2
 #define CONTROLVM_RESP_KMALLOC_FAILED		   3
 #define CONTROLVM_RESP_ID_UNKNOWN		   4
 #define CONTROLVM_RESP_ID_INVALID_FOR_CLIENT	   5
-/* CONTROLVM_INIT_CHIPSET-------------------------------------------[100-199] */
+/* CONTROLVM_INIT_CHIPSET [100-199] */
 #define CONTROLVM_RESP_CLIENT_SWITCHCOUNT_NONZERO  100
 #define CONTROLVM_RESP_EXPECTED_CHIPSET_INIT	   101
-/* Maximum Limit----------------------------------------------------[200-299] */
+/* Maximum Limit [200-299] */
 /* BUS_CREATE */
 #define CONTROLVM_RESP_ERROR_MAX_BUSES		   201
-/* DEVICE_CREATE */
 #define CONTROLVM_RESP_ERROR_MAX_DEVICES	   202
-/* Payload and Parameter Related------------------------------------[400-499] */
-/* SWITCH_ATTACHEXTPORT, DEVICE_CONFIGURE */
+/* Payload and Parameter Related [400-499] */
+/* DEVICE_CONFIGURE */
 #define CONTROLVM_RESP_PAYLOAD_INVALID		   400
-/* Multiple */
 #define CONTROLVM_RESP_INITIATOR_PARAMETER_INVALID 401
-/* DEVICE_CONFIGURE */
 #define CONTROLVM_RESP_TARGET_PARAMETER_INVALID	   402
-/* DEVICE_CONFIGURE */
 #define CONTROLVM_RESP_CLIENT_PARAMETER_INVALID	   403
-/* Specified[Packet Structure] Value--------------------------------[500-599] */
-/* SWITCH_ATTACHINTPORT */
-/* BUS_CONFIGURE, DEVICE_CREATE, DEVICE_CONFIG, DEVICE_DESTROY */
+/* BUS_CONFIGURE, DEVICE_CREATE, DEVICE_CONFIGURE, DEVICE_DESTROY */
 #define CONTROLVM_RESP_BUS_INVALID		   500
-/* SWITCH_ATTACHINTPORT*/
-/* DEVICE_CREATE, DEVICE_CONFIGURE, DEVICE_DESTROY */
 #define CONTROLVM_RESP_DEVICE_INVALID		   501
-/* DEVICE_CREATE, DEVICE_CONFIGURE */
 #define CONTROLVM_RESP_CHANNEL_INVALID		   502
-/* Partition Driver Callback Interface------------------------------[600-699] */
+/* Partition Driver Callback Interface [600-699] */
 /* BUS_CREATE, BUS_DESTROY, DEVICE_CREATE, DEVICE_DESTROY */
 #define CONTROLVM_RESP_VIRTPCI_DRIVER_FAILURE	   604
-/* Unable to invoke VIRTPCI callback. VIRTPCI Callback returned error. */
-/* BUS_CREATE, BUS_DESTROY, DEVICE_CREATE, DEVICE_DESTROY */
 #define CONTROLVM_RESP_VIRTPCI_DRIVER_CALLBACK_ERROR   605
 /* Generic device callback returned error. */
 /* SWITCH_ATTACHEXTPORT, SWITCH_DETACHEXTPORT, DEVICE_CONFIGURE */
 #define CONTROLVM_RESP_GENERIC_DRIVER_CALLBACK_ERROR   606
-/* Bus Related------------------------------------------------------[700-799] */
+/* Bus Related [700-799] */
 /* BUS_DESTROY */
 #define CONTROLVM_RESP_ERROR_BUS_DEVICE_ATTACHED       700
-/* Channel Related--------------------------------------------------[800-899] */
+/* Channel Related [800-899] */
 /* GET_CHANNELINFO, DEVICE_DESTROY */
 #define CONTROLVM_RESP_CHANNEL_TYPE_UNKNOWN	       800
-/* DEVICE_CREATE */
 #define CONTROLVM_RESP_CHANNEL_SIZE_TOO_SMALL	       801
-/* Chipset Shutdown Related---------------------------------------[1000-1099] */
+/* Chipset Shutdown Related [1000-1099] */
 #define CONTROLVM_RESP_CHIPSET_SHUTDOWN_FAILED	       1000
 #define CONTROLVM_RESP_CHIPSET_SHUTDOWN_ALREADY_ACTIVE 1001
-/* Chipset Stop Related-------------------------------------------[1100-1199] */
+/* Chipset Stop Related [1100-1199] */
 #define CONTROLVM_RESP_CHIPSET_STOP_FAILED_BUS	       1100
 #define CONTROLVM_RESP_CHIPSET_STOP_FAILED_SWITCH      1101
-/* Device Related-------------------------------------------------[1400-1499] */
+/* Device Related [1400-1499] */
 #define CONTROLVM_RESP_DEVICE_UDEV_TIMEOUT	       1400
 
 /* __CONTROLVMCHANNEL_H__ */
