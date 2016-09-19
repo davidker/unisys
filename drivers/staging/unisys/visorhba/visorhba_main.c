@@ -17,6 +17,8 @@
 
 #include "iochannel.h"
 
+#define VERSION "1.16.10.7"  /* visorhba driver version */
+
 #define MAX_PENDING_REQUESTS (MIN_NUMSIGNALS * 2)
 
 static struct dentry *visorhba_debugfs_dir;
@@ -1186,3 +1188,4 @@ module_exit(visorhba_exit);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par HBA driver for virtual SCSI host busses");
+MODULE_VERSION(VERSION);

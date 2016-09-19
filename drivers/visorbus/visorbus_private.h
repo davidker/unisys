@@ -14,6 +14,8 @@
 #include "controlvmchannel.h"
 #include "vbuschannel.h"
 
+#define VERSION "1.16.10.7"  /* visorbus driver version */
+
 struct visor_device *visorbus_get_device_by_id(u32 bus_no, u32 dev_no,
 					       struct visor_device *from);
 int visorbus_create_instance(struct visor_device *dev);
