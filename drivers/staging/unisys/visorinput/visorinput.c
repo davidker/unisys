@@ -33,6 +33,8 @@
 #include "visorbus.h"
 #include "ultrainputreport.h"
 
+#define VERSION "1.16.10.7"  /* visorinput driver version */
+
 /* Keyboard channel {c73416d0-b0b8-44af-b304-9d2ae99f1b3d} */
 #define SPAR_KEYBOARD_CHANNEL_PROTOCOL_UUID				\
 	UUID_LE(0xc73416d0, 0xb0b8, 0x44af,				\
@@ -820,6 +822,7 @@ MODULE_DEVICE_TABLE(visorbus, visorinput_channel_types);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par human input driver for virtual keyboard/mouse");
+MODULE_VERSION(VERSION);
 
 MODULE_ALIAS("visorbus:" SPAR_MOUSE_CHANNEL_PROTOCOL_UUID_STR);
 MODULE_ALIAS("visorbus:" SPAR_KEYBOARD_CHANNEL_PROTOCOL_UUID_STR);
