@@ -23,6 +23,8 @@
 #include "controlvmchannel.h"
 #include "vbuschannel.h"
 
+#define VERSION "1.16.10.7"  /* visorbus driver version */
+
 /* TARGET_HOSTNAME specified as -DTARGET_HOSTNAME=\"thename\" on the
  * command line
  */
