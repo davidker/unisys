@@ -20,6 +20,8 @@
 
 #include "iochannel.h"
 
+#define VERSION "1.16.10.7"  /* visornic driver version */
+
 #define VISORNIC_INFINITE_RSP_WAIT 0
 
 /* MAX_BUF = 64 lines x 32 MAXVNIC x 80 characters
@@ -2002,3 +2004,4 @@ module_exit(visornic_cleanup);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par NIC driver for virtual network devices");
+MODULE_VERSION(VERSION);
