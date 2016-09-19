@@ -778,13 +778,13 @@ device_epilog(struct visor_device *dev_info,
 				 */
 				chipset_device_pause(dev_info);
 			}
+			break;
+		case CONTROLVM_DEVICE_DESTROY:
+			chipset_device_destroy(dev_info);
 			if ((dev_info->gsi_vector > 0) &&
 			    (dev_info->irq > 0)) {
 				acpi_unregister_gsi(dev_info->gsi_vector);
 			}
-			break;
-		case CONTROLVM_DEVICE_DESTROY:
-			chipset_device_destroy(dev_info);
 			break;
 		}
 	}
