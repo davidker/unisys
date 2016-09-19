@@ -113,21 +113,6 @@ struct visorhba_devices_open {
 	struct visorhba_devdata *devdata;
 };
 
-/* This is used to tell the visor bus driver which types of visor devices
- * we support, and what functions to call when a visor device that we support
- * is attached or removed.
- */
-static struct visor_driver visorhba_driver = {
-	.name = "visorhba",
-	.owner = THIS_MODULE,
-	.channel_types = visorhba_channel_types,
-	.probe = visorhba_probe,
-	.remove = visorhba_remove,
-	.pause = visorhba_pause,
-	.resume = visorhba_resume,
-	.channel_interrupt = visorhba_isr,
-};
-
 #define for_each_vdisk(iter, list)			  \
 	for (iter = &list->head; iter->next; iter = iter->next)
 
@@ -1145,7 +1130,7 @@ static struct visor_driver visorhba_driver = {
 	.remove = visorhba_remove,
 	.pause = visorhba_pause,
 	.resume = visorhba_resume,
-	.channel_interrupt = NULL,
+	.channel_interrupt = visorhba_isr,
 };
 
 /**
