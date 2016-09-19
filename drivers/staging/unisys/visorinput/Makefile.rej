@@ -1,0 +1,8 @@
+--- drivers/staging/unisys/visorinput/Makefile
++++ drivers/staging/unisys/visorinput/Makefile
+@@ -4,4 +4,4 @@
+ 
+ obj-$(CONFIG_UNISYS_VISORINPUT)	+= visorinput.o
+ 
+-ccflags-y += -Idrivers/staging/unisys/include
++ccflags-y += -Idrivers/staging/unisys/include -Werror
