@@ -20,7 +20,6 @@
 
 #include "visorbus.h"
 #include "visorbus_private.h"
-#include "version.h"
 #include "vmcallinterface.h"
 
 #define MYDRVNAME "visorbus"

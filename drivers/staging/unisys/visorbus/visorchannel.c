@@ -23,7 +23,6 @@
 #include <linux/io.h>
 #include <linux/llist.h>
 
-#include "version.h"
 #include "visorbus.h"
 #include "controlvmchannel.h"
 

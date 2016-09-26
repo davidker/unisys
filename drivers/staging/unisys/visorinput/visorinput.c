@@ -30,9 +30,10 @@
 #include <linux/uuid.h>
 #include <linux/workqueue.h>
 
-#include "version.h"
 #include "visorbus.h"
 #include "ultrainputreport.h"
+
+#define VERSION "2.16.9.26"  /* visorinput driver version */
 
 /* Keyboard channel {c73416d0-b0b8-44af-b304-9d2ae99f1b3d} */
 #define SPAR_KEYBOARD_CHANNEL_PROTOCOL_UUID				\
@@ -789,6 +790,7 @@ static struct visor_channeltype_descriptor visorinput_channel_types[] = {
 
 static struct visor_driver visorinput_driver = {
 	.name = "visorinput",
+	.version = VERSION,
 	.vertag = NULL,
 	.owner = THIS_MODULE,
 	.channel_types = visorinput_channel_types,
