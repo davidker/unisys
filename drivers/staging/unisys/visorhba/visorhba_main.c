@@ -26,6 +26,8 @@
 #include "visorbus.h"
 #include "iochannel.h"
 
+#define VERSION "2.16.9.26"  /* visorhba driver version */
+
 #define MAX_PENDING_REQUESTS	(MIN_NUMSIGNALS * 2)
 
 
@@ -1124,6 +1126,7 @@ static void visorhba_remove(struct visor_device *dev)
  */
 static struct visor_driver visorhba_driver = {
 	.name = "visorhba",
+	.version = VERSION,
 	.owner = THIS_MODULE,
 	.channel_types = visorhba_channel_types,
 	.probe = visorhba_probe,
@@ -1176,3 +1179,4 @@ module_exit(visorhba_exit);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par HBA driver for virtual SCSI host busses");
+MODULE_VERSION(VERSION);
