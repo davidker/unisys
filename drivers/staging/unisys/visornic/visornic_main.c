@@ -27,6 +27,8 @@
 #include "visorbus.h"
 #include "iochannel.h"
 
+#define VERSION "2.16.9.26"  /* visornic driver version */
+
 #define VISORNIC_INFINITE_RSP_WAIT 0
 
 /* MAX_BUF = 64 lines x 32 MAXVNIC x 80 characters
@@ -2010,7 +2012,7 @@ static int visornic_resume(struct visor_device *dev,
  */
 static struct visor_driver visornic_driver = {
 	.name = "visornic",
-	.version = "1.0.0.0",
+	.version = VERSION,
 	.vertag = NULL,
 	.owner = THIS_MODULE,
 	.channel_types = visornic_channel_types,
@@ -2076,4 +2078,4 @@ module_exit(visornic_cleanup);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par NIC driver for virtual network devices");
-MODULE_VERSION("1.0.0.0");
+MODULE_VERSION(VERSION);
