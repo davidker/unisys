@@ -1584,7 +1584,7 @@ err_finish_ctx:
  *    true  - processing of the controlvm message completed,
  *            either successfully or with an error
  */
-static bool
+static int
 handle_command(struct controlvm_message inmsg, u64 channel_addr)
 {
 	struct controlvm_message_packet *cmd = &inmsg.cmd;
@@ -1593,11 +1593,13 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
 	struct parser_context *parser_ctx = NULL;
 	bool local_addr;
 	struct controlvm_message ackmsg;
+	int err = 0;
 
 	/* create parsing context if necessary */
 	local_addr = (inmsg.hdr.flags.test_message == 1);
 	if (channel_addr == 0)
-		return true;
+		return -EINVAL;
+
 	parm_addr = channel_addr + inmsg.hdr.payload_vm_offset;
 	parm_bytes = inmsg.hdr.payload_bytes;
 
@@ -1613,7 +1615,7 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
 		    parser_init_byte_stream(parm_addr, parm_bytes,
 					    local_addr, &retry);
 		if (!parser_ctx && retry)
-			return false;
+			return -EAGAIN;
 	}
 
 	if (!local_addr) {
@@ -1623,56 +1625,57 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
 			visorchannel_signalinsert(
 					chipset_dev->controlvm_channel,
 					CONTROLVM_QUEUE_ACK, &ackmsg);
+		err = visorchannel_signalinsert(chipset_dev->controlvm_channel,
+						CONTROLVM_QUEUE_ACK,
+						&ackmsg);
+		if (err)
+			return err;
 	}
 	switch (inmsg.hdr.id) {
 	case CONTROLVM_CHIPSET_INIT:
-		chipset_init(&inmsg);
+		err = chipset_init(&inmsg);
 		break;
 	case CONTROLVM_BUS_CREATE:
-		bus_create(&inmsg);
+		err = bus_create(&inmsg);
 		break;
 	case CONTROLVM_BUS_DESTROY:
-		bus_destroy(&inmsg);
+		err = bus_destroy(&inmsg);
 		break;
 	case CONTROLVM_BUS_CONFIGURE:
-		bus_configure(&inmsg, parser_ctx);
+		err = bus_configure(&inmsg, parser_ctx);
 		break;
 	case CONTROLVM_DEVICE_CREATE:
-		my_device_create(&inmsg);
+		err = my_device_create(&inmsg);
 		break;
 	case CONTROLVM_DEVICE_CHANGESTATE:
 		if (cmd->device_change_state.flags.phys_device) {
-			parahotplug_process_message(&inmsg);
+			err = parahotplug_process_message(&inmsg);
 		} else {
 			/*
 			 * save the hdr and cmd structures for later use
 			 * when sending back the response to Command
 			 */
-			my_device_changestate(&inmsg);
+			err = my_device_changestate(&inmsg);
 			break;
 		}
 		break;
 	case CONTROLVM_DEVICE_DESTROY:
-		my_device_destroy(&inmsg);
+		err = my_device_destroy(&inmsg);
 		break;
 	case CONTROLVM_DEVICE_CONFIGURE:
-		/* no op for now, just send a respond that we passed */
-		if (inmsg.hdr.flags.response_expected)
-			controlvm_respond(&inmsg.hdr, CONTROLVM_RESP_SUCCESS);
+		/* no op just send a respond that we passed */
 		break;
 	case CONTROLVM_CHIPSET_READY:
-		chipset_ready_uevent(&inmsg.hdr);
+		err = chipset_ready_uevent(&inmsg.hdr);
 		break;
 	case CONTROLVM_CHIPSET_SELFTEST:
-		chipset_selftest_uevent(&inmsg.hdr);
+		err = chipset_selftest_uevent(&inmsg.hdr);
 		break;
 	case CONTROLVM_CHIPSET_STOP:
-		chipset_notready_uevent(&inmsg.hdr);
+		err = chipset_notready_uevent(&inmsg.hdr);
 		break;
 	default:
-		if (inmsg.hdr.flags.response_expected)
-			controlvm_respond
-				(&inmsg.hdr, -CONTROLVM_RESP_ID_UNKNOWN);
+		err = -ENOMSG;
 		break;
 	}
 
@@ -1680,7 +1683,7 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
 		parser_done(parser_ctx);
 		parser_ctx = NULL;
 	}
-	return true;
+	return err;
 }
 
 /*
