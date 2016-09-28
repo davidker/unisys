@@ -33,33 +33,12 @@
 
 #include "channel.h"
 
-#define ULTRA_VHBA_CHANNEL_PROTOCOL_SIGNATURE ULTRA_CHANNEL_PROTOCOL_SIGNATURE
-#define ULTRA_VNIC_CHANNEL_PROTOCOL_SIGNATURE ULTRA_CHANNEL_PROTOCOL_SIGNATURE
-#define ULTRA_VSWITCH_CHANNEL_PROTOCOL_SIGNATURE \
-	ULTRA_CHANNEL_PROTOCOL_SIGNATURE
-
-/*
- * Must increment these whenever you insert or delete fields within this channel
- * struct. Also increment whenever you change the meaning of fields within this
- * channel struct so as to break pre-existing software. Note that you can
- * usually add fields to the END of the channel struct without needing to
+/* Must increment these whenever you insert or delete fields within this channel
+ * struct.  Also increment whenever you change the meaning of fields within this
+ * channel struct so as to break pre-existing software.  Note that you can
+ * usually add fields to the END of the channel struct withOUT needing to
  * increment this.
  */
-#define ULTRA_VHBA_CHANNEL_PROTOCOL_VERSIONID 2
-#define ULTRA_VNIC_CHANNEL_PROTOCOL_VERSIONID 2
-#define ULTRA_VSWITCH_CHANNEL_PROTOCOL_VERSIONID 1
-
-#define SPAR_VHBA_CHANNEL_OK_CLIENT(ch)			\
-	(spar_check_channel_client(ch, spar_vhba_channel_protocol_uuid, \
-				   "vhba", MIN_IO_CHANNEL_SIZE,	\
-				   ULTRA_VHBA_CHANNEL_PROTOCOL_VERSIONID, \
-				   ULTRA_VHBA_CHANNEL_PROTOCOL_SIGNATURE))
-
-#define SPAR_VNIC_CHANNEL_OK_CLIENT(ch)			\
-	(spar_check_channel_client(ch, spar_vnic_channel_protocol_uuid, \
-				   "vnic", MIN_IO_CHANNEL_SIZE,	\
-				   ULTRA_VNIC_CHANNEL_PROTOCOL_VERSIONID, \
-				   ULTRA_VNIC_CHANNEL_PROTOCOL_SIGNATURE))
 
 /*
  * Everything necessary to handle SCSI & NIC traffic between Guest Partition and
@@ -161,8 +140,6 @@ struct guest_phys_info {
 	u64 address;
 	u64 length;
 } __packed;
-
-#define GPI_ENTRIES_PER_PAGE (PAGE_SIZE / sizeof(struct guest_phys_info))
 
 struct uisscsi_dest {
 	u32 channel;	/* channel == bus number */
@@ -507,7 +484,6 @@ struct uiscmdrsp {
 #define CMD_NET_TYPE		2
 #define CMD_SCSITASKMGMT_TYPE	3
 #define CMD_NOTIFYGUEST_TYPE	4
-#define CMD_VDISKMGMT_TYPE	5
 	union {
 		struct uiscmdrsp_scsi scsi;
 		struct uiscmdrsp_net net;
