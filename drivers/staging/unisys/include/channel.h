@@ -30,13 +30,9 @@
 /* define the following to prevent include nesting in kernel header
  * files of similar abbreviated content
  */
-#define __SUPERVISOR_CHANNEL_H__
-
 #define SIGNATURE_16(A, B) ((A) | (B << 8))
 #define SIGNATURE_32(A, B, C, D) \
 	(SIGNATURE_16(A, B) | (SIGNATURE_16(C, D) << 16))
-#define SIGNATURE_64(A, B, C, D, E, F, G, H) \
-	(SIGNATURE_32(A, B, C, D) | ((u64)(SIGNATURE_32(E, F, G, H)) << 32))
 
 #ifndef lengthof
 #define lengthof(TYPE, MEMBER) (sizeof(((TYPE *)0)->MEMBER))
@@ -75,27 +71,6 @@ enum channel_clientstate {
 				/* access channel anytime */
 };
 
-#define SPAR_CHANNEL_SERVER_READY(ch) \
-	(readl(&(ch)->srv_state) == CHANNELSRV_READY)
-
-#define ULTRA_VALID_CHANNELCLI_TRANSITION(o, n)				\
-	(((((o) == CHANNELCLI_DETACHED) && ((n) == CHANNELCLI_DISABLED)) || \
-	  (((o) == CHANNELCLI_ATTACHING) && ((n) == CHANNELCLI_DISABLED)) || \
-	  (((o) == CHANNELCLI_ATTACHED) && ((n) == CHANNELCLI_DISABLED)) || \
-	  (((o) == CHANNELCLI_ATTACHING) && ((n) == CHANNELCLI_DETACHED)) || \
-	  (((o) == CHANNELCLI_ATTACHED) && ((n) == CHANNELCLI_DETACHED)) || \
-	  (((o) == CHANNELCLI_DETACHED) && ((n) == CHANNELCLI_ATTACHING)) || \
-	  (((o) == CHANNELCLI_ATTACHING) && ((n) == CHANNELCLI_ATTACHED)) || \
-	  (((o) == CHANNELCLI_DETACHED) && ((n) == CHANNELCLI_ATTACHED)) || \
-	  (((o) == CHANNELCLI_BUSY) && ((n) == CHANNELCLI_ATTACHED)) ||	\
-	  (((o) == CHANNELCLI_ATTACHED) && ((n) == CHANNELCLI_BUSY)) ||	\
-	  (((o) == CHANNELCLI_DETACHED) && ((n) == CHANNELCLI_OWNED)) || \
-	  (((o) == CHANNELCLI_DISABLED) && ((n) == CHANNELCLI_OWNED)) || \
-	  (((o) == CHANNELCLI_ATTACHING) && ((n) == CHANNELCLI_OWNED)) || \
-	  (((o) == CHANNELCLI_ATTACHED) && ((n) == CHANNELCLI_OWNED)) || \
-	  (((o) == CHANNELCLI_BUSY) && ((n) == CHANNELCLI_OWNED)) || (0)) \
-	 ? (1) : (0))
-
 /* Values for ULTRA_CHANNEL_PROTOCOL.CliErrorBoot: */
 /* throttling invalid boot channel statetransition error due to client
  * disabled
@@ -118,10 +93,7 @@ enum channel_clientstate {
  * channels should be defined here.  The io channel feature bits are
  * defined right here
  */
-#define ULTRA_IO_DRIVER_ENABLES_INTS (0x1ULL << 1)
 #define ULTRA_IO_CHANNEL_IS_POLLING (0x1ULL << 3)
-#define ULTRA_IO_IOVM_IS_OK_WITH_DRIVER_DISABLING_INTS (0x1ULL << 4)
-#define ULTRA_IO_DRIVER_DISABLES_INTS (0x1ULL << 5)
 #define ULTRA_IO_DRIVER_SUPPORTS_ENHANCED_RCVBUF_CHECKING (0x1ULL << 6)
 
 /* Common Channel Header */
@@ -172,8 +144,6 @@ struct channel_header {
 	u8 recover_channel;
 } __packed;
 
-#define ULTRA_CHANNEL_ENABLE_INTS (0x1ULL << 0)
-
 /* Subheader for the Signal Type variation of the Common Channel */
 struct signal_queue_header {
 	/* 1st cache line */
@@ -213,20 +183,6 @@ struct signal_queue_header {
 				 */
 	u8 filler[12];		/* Pad out to 64 byte cacheline */
 } __packed;
-
-#define spar_signal_init(chan, QHDRFLD, QDATAFLD, QDATATYPE, ver, typ)	\
-	do {								\
-		memset(&chan->QHDRFLD, 0, sizeof(chan->QHDRFLD));	\
-		chan->QHDRFLD.version = ver;				\
-		chan->QHDRFLD.chtype = typ;				\
-		chan->QHDRFLD.size = sizeof(chan->QDATAFLD);		\
-		chan->QHDRFLD.signal_size = sizeof(QDATATYPE);		\
-		chan->QHDRFLD.sig_base_offset = (u64)(chan->QDATAFLD) -	\
-			(u64)(&chan->QHDRFLD);				\
-		chan->QHDRFLD.max_slots =				\
-			sizeof(chan->QDATAFLD) / sizeof(QDATATYPE);	\
-		chan->QHDRFLD.max_signals = chan->QHDRFLD.max_slots - 1;\
-	} while (0)
 
 /* Generic function useful for validating any type of channel when it is
  * received by the client that will be accessing the channel.
@@ -424,10 +380,5 @@ static const uuid_le spar_siovm_uuid = SPAR_SIOVM_UUID;
 
 static const uuid_le spar_controldirector_channel_protocol_uuid =
 	SPAR_CONTROLDIRECTOR_CHANNEL_PROTOCOL_UUID;
-
-/* {b4e79625-aede-4eAA-9e11-D3eddcd4504c} */
-#define SPAR_DIAG_POOL_CHANNEL_PROTOCOL_UUID				\
-		UUID_LE(0xb4e79625, 0xaede, 0x4eaa, \
-				0x9e, 0x11, 0xd3, 0xed, 0xdc, 0xd4, 0x50, 0x4c)
 
 #endif
