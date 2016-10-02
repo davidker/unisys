@@ -52,8 +52,6 @@ struct visorchannel {
 void
 visorchannel_destroy(struct visorchannel *channel)
 {
-	if (!channel)
-		return;
 	if (channel->mapped) {
 		memunmap(channel->mapped);
 		if (channel->requested)
