@@ -1135,6 +1135,7 @@ static void visorhba_remove(struct visor_device *dev)
  */
 static struct visor_driver visorhba_driver = {
 	.name = "visorhba",
+	.version = VERSION,
 	.owner = THIS_MODULE,
 	.channel_types = visorhba_channel_types,
 	.probe = visorhba_probe,
