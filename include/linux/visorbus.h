@@ -276,6 +276,8 @@ struct visor_channeltype_descriptor {
  * struct visor_driver - Information provided by each visor driver when it
  *                       registers with the visorbus driver
  * @name:		Name of the visor driver.
+ * @version:		Visor driver version in the form:
+ *			<major-ver>.<year>.<month>.<day>
  * @owner:		The module owner.
  * @channel_types:	Types of channels handled by this driver, ending with
  *			a zero GUID. Our specialized BUS.match() method knows
@@ -305,6 +307,7 @@ struct visor_channeltype_descriptor {
  */
 struct visor_driver {
 	const char *name;
+	const char *version;
 	struct module *owner;
 	struct visor_channeltype_descriptor *channel_types;
 	int (*probe)(struct visor_device *dev);
