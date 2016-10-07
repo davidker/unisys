@@ -1088,7 +1088,8 @@ fix_vbus_dev_info(struct visor_device *visordev)
 		}
 	}
 
-	bus_device_info_init(&dev_info, chan_type_name, visordrv->name);
+	bus_device_info_init(&dev_info, chan_type_name, visordrv->name,
+			     visordrv->version);
 	write_vbus_dev_info(bdev->visorchannel, hdr_info, &dev_info, dev_no);
 
 	/*
@@ -1584,7 +1585,8 @@ visorbus_init(void)
 	if (!visorbus_debugfs_dir)
 		return -ENOMEM;
 
-	bus_device_info_init(&clientbus_driverinfo, "clientbus", "visorbus");
+	bus_device_info_init(&clientbus_driverinfo, "clientbus", "visorbus",
+			     VERSION);
 
 	err = create_bus_type();
 	if (err < 0) {
@@ -1593,7 +1595,8 @@ visorbus_init(void)
 		goto error;
 	}
 
-	bus_device_info_init(&chipset_driverinfo, "chipset", "visorchipset");
+	bus_device_info_init(&chipset_driverinfo, "chipset", "visorchipset",
+			     VERSION);
 
 	return 0;
 

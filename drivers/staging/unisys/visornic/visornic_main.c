@@ -2012,6 +2012,7 @@ static int visornic_resume(struct visor_device *dev,
  */
 static struct visor_driver visornic_driver = {
 	.name = "visornic",
+	.version = VERSION,
 	.owner = THIS_MODULE,
 	.channel_types = visornic_channel_types,
 	.probe = visornic_probe,

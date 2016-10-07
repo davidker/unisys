@@ -31,7 +31,7 @@
 
 static inline void bus_device_info_init(
 		struct ultra_vbus_deviceinfo *bus_device_info_ptr,
-		const char *dev_type, const char *drv_name)
+		const char *dev_type, const char *drv_name, const char *drv_ver)
 {
 	memset(bus_device_info_ptr, 0, sizeof(struct ultra_vbus_deviceinfo));
 	snprintf(bus_device_info_ptr->devtype,
@@ -41,8 +41,9 @@ static inline void bus_device_info_init(
 		 sizeof(bus_device_info_ptr->drvname),
 		 "%s", (drv_name) ? drv_name : "unknownDriver");
 	snprintf(bus_device_info_ptr->infostrs,
-		 sizeof(bus_device_info_ptr->infostrs), "kernel ver. %s",
-		 utsname()->release);
+		 sizeof(bus_device_info_ptr->infostrs),
+		 "kernel ver. %s\tdriver ver. %s",
+		 utsname()->release, drv_ver);
 }
 
 void chipset_bus_create(struct visor_device *bus_info);
