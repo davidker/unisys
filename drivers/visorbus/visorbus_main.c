@@ -1060,7 +1060,7 @@ static void write_vbus_dev_info(struct visorchannel *chan,
 
 static void bus_device_info_init(
 		struct visor_vbus_deviceinfo *bus_device_info_ptr,
-		const char *dev_type, const char *drv_name)
+		const char *dev_type, const char *drv_name, const char *drv_ver)
 {
 	memset(bus_device_info_ptr, 0, sizeof(struct visor_vbus_deviceinfo));
 	snprintf(bus_device_info_ptr->devtype,
@@ -1070,8 +1070,9 @@ static void bus_device_info_init(
 		 sizeof(bus_device_info_ptr->drvname),
 		 "%s", (drv_name) ? drv_name : "unknownDriver");
 	snprintf(bus_device_info_ptr->infostrs,
-		 sizeof(bus_device_info_ptr->infostrs), "kernel ver. %s",
-		 utsname()->release);
+		 sizeof(bus_device_info_ptr->infostrs),
+		 "kernel ver. %s %s",
+		 utsname()->release, drv_ver);
 }
 
 /*
@@ -1115,7 +1116,8 @@ static void publish_vbus_dev_info(struct visor_device *visordev)
 			break;
 		}
 	}
-	bus_device_info_init(&dev_info, chan_type_name, visordrv->name);
+	bus_device_info_init(&dev_info, chan_type_name, visordrv->name,
+			     visordrv->version);
 	write_vbus_dev_info(bdev->visorchannel, hdr_info, &dev_info, dev_no);
 	write_vbus_chp_info(bdev->visorchannel, hdr_info, &chipset_driverinfo);
 	write_vbus_bus_info(bdev->visorchannel, hdr_info,
@@ -1456,12 +1458,14 @@ int visorbus_init(void)
 	int err;
 
 	visorbus_debugfs_dir = debugfs_create_dir("visorbus", NULL);
-	bus_device_info_init(&clientbus_driverinfo, "clientbus", "visorbus");
+	bus_device_info_init(&clientbus_driverinfo, "clientbus", "visorbus",
+			     VERSION);
 	err = bus_register(&visorbus_type);
 	if (err < 0)
 		return err;
 	initialized = true;
-	bus_device_info_init(&chipset_driverinfo, "chipset", "visorchipset");
+	bus_device_info_init(&chipset_driverinfo, "chipset", "visorchipset",
+			     VERSION);
 	return 0;
 }
 
