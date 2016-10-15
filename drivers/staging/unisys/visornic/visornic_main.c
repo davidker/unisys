@@ -1874,6 +1874,7 @@ static void visornic_remove(struct visor_device *dev)
 	/* this will call visornic_close() */
 	unregister_netdev(netdev);
 	visorbus_disable_channel_interrupts(dev);
+	visorbus_unregister_for_channel_interrupts(dev);
 	netif_napi_del(&devdata->napi);
 	dev_set_drvdata(&dev->device, NULL);
 	host_side_disappeared(devdata);
