@@ -637,10 +637,14 @@ EXPORT_SYMBOL_GPL(visorbus_enable_channel_interrupts);
 void
 visorbus_disable_channel_interrupts(struct visor_device *dev)
 {
-	if (dev->request_irq_done)
-		visorbus_free_irq(dev);
-	else
+	if (dev->request_irq_done) {
+		visorchannel_clear_sig_features(dev->visorchannel,
+						dev->recv_queue,
+						ULTRA_CHANNEL_ENABLE_INTS);
+		visorbus_set_channel_state(dev, CHANNELCLI_DISABLED);
+	} else {
 		dev_stop_periodic_work(dev);
+	}
 }
 EXPORT_SYMBOL_GPL(visorbus_disable_channel_interrupts);
 
@@ -741,18 +745,6 @@ static int visorbus_clear_channel_features(struct visor_device *dev,
 	return err;
 }
 
-static void visorbus_free_irq(struct visor_device *dev)
-{
-	visorchannel_clear_sig_features(dev->visorchannel,
-					dev->recv_queue,
-					ULTRA_CHANNEL_ENABLE_INTS);
-	if (!dev->request_irq_done)
-		return;
-	free_irq(dev->irq, dev);
-	dev_dbg(&dev->device, "IRQ=%d unregistered\n", dev->irq);
-	dev->request_irq_done = false;
-}
-
 /*
  * visorbus_register_for_channel_interrupts(struct visor_device *dev,
  *                                         u32 queue)
@@ -796,6 +788,25 @@ int visorbus_register_for_channel_interrupts(struct visor_device *dev,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(visorbus_register_for_channel_interrupts);
+
+/*
+ * visorbus_unregister_for_channel_interrupts(struct visor_device *dev)
+ * @dev: the device on which to unregister interrupts
+ *
+ * Unregister the driver from receiving s-Par interrupts for the given
+ * device.
+ *
+ */
+void visorbus_unregister_for_channel_interrupts(struct visor_device *dev)
+{
+	if (!dev->request_irq_done)
+		return;
+
+	free_irq(dev->irq, dev);
+	dev_dbg(&dev->device, "IRQ=%d unregistered\n", dev->irq);
+	dev->request_irq_done = false;
+}
+EXPORT_SYMBOL_GPL(visorbus_unregister_for_channel_interrupts);
 
 /**
  * visorbus_log_postcode() - logs a 64-bit value comprised of the inputs
