@@ -713,6 +713,7 @@ static void visorhba_serverdown_complete(struct visorhba_devdata *devdata)
 	unsigned long flags;
 
 	visorbus_disable_channel_interrupts(devdata->dev);
+	visorbus_unregister_for_channel_interrupts(devdata->dev);
 	/* Stop using the IOVM response queue (queue should be drained
 	 * by the end)
 	 */
@@ -1114,6 +1115,7 @@ static void visorhba_remove(struct visor_device *dev)
 
 	scsihost = devdata->scsihost;
 	visorbus_disable_channel_interrupts(dev);
+	visorbus_unregister_for_channel_interrupts(dev);
 	tasklet_kill(&devdata->tasklet);
 	scsi_remove_host(scsihost);
 	scsi_host_put(scsihost);
