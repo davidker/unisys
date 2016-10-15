@@ -339,6 +339,7 @@ void visorbus_disable_channel_interrupts(struct visor_device *dev);
 void visorbus_rearm_channel_interrupts(struct visor_device *dev);
 int visorbus_register_for_channel_interrupts(struct visor_device *dev,
 					     u32 queue);
+void visorbus_unregister_for_channel_interrupts(struct visor_device *dev);
 
 int visorchannel_signalremove(struct visorchannel *channel, u32 queue,
 			      void *msg);
