@@ -1995,7 +1995,6 @@ static int visornic_resume(struct visor_device *dev,
 	spin_unlock_irqrestore(&devdata->priv_lock, flags);
 
 	visorbus_enable_channel_interrupts(dev);
-	init_rcv_bufs(netdev, devdata);
 
 	rtnl_lock();
 	dev_open(netdev);
