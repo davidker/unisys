@@ -1588,7 +1588,6 @@ initiate_chipset_device_pause_resume(struct visor_device *dev, bool is_pause)
 		}
 
 		dev->resuming = true;
-		visorbus_set_channel_state(dev, CHANNELCLI_OWNED);
 		rc = drv->resume(dev, resume_state_change_complete);
 	}
 	if (rc < 0) {
