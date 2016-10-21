@@ -632,6 +632,7 @@ static int visornic_enable_with_timeout(struct net_device *netdev,
 	int wait = 0;
 
 	napi_enable(&devdata->napi);
+	visorbus_enable_channel_interrupts(devdata->dev);
 	/* NOTE: the other end automatically unposts the rcv buffers when it
 	 * gets a disable.
 	 */
@@ -1941,7 +1942,6 @@ static int visornic_resume(struct visor_device *dev,
 	devdata->server_change_state = true;
 	spin_unlock_irqrestore(&devdata->priv_lock, flags);
 
-	visorbus_enable_channel_interrupts(dev);
 	rtnl_lock();
 	dev_open(netdev, NULL);
 	rtnl_unlock();
