@@ -60,12 +60,6 @@ visorchipset_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int
-visorchipset_release(struct inode *inode, struct file *file)
-{
-	return 0;
-}
-
 /*
  * When the controlvm channel is idle for at least MIN_IDLE_SECONDS,
  * we switch to slow polling mode. As soon as we get a controlvm
@@ -1347,16 +1341,11 @@ static const struct attribute_group *visorchipset_dev_groups[] = {
 	NULL
 };
 
-static void visorchipset_dev_release(struct device *dev)
-{
-}
-
 /* /sys/devices/platform/visorchipset */
 static struct platform_device visorchipset_platform_device = {
 	.name = "visorchipset",
 	.id = -1,
 	.dev.groups = visorchipset_dev_groups,
-	.dev.release = visorchipset_dev_release,
 };
 
 /**
@@ -1784,7 +1773,6 @@ static const struct file_operations visorchipset_fops = {
 	.read = NULL,
 	.write = NULL,
 	.unlocked_ioctl = visorchipset_ioctl,
-	.release = visorchipset_release,
 	.mmap = visorchipset_mmap,
 };
 
