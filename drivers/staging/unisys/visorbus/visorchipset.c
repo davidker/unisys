@@ -1515,9 +1515,9 @@ chipset_notready(struct controlvm_message_header *msg_hdr)
 static inline unsigned int
 issue_vmcall_io_controlvm_addr(u64 *control_addr, u32 *control_bytes)
 {
-	struct vmcall_io_controlvm_addr_params params;
-	int result = VMCALL_SUCCESS;
-	u64 physaddr;
+	static struct vmcall_io_controlvm_addr_params params;
+	static int result = VMCALL_SUCCESS;
+	static u64 physaddr;
 
 	physaddr = virt_to_phys(&params);
 	ISSUE_IO_VMCALL(VMCALL_IO_CONTROLVM_ADDR, physaddr, result);
