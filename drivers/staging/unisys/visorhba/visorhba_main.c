@@ -842,7 +842,7 @@ static void
 do_scsi_nolinuxstat(struct uiscmdrsp *cmdrsp, struct scsi_cmnd *scsicmd)
 {
 	struct scsi_device *scsidev;
-	unsigned char buf[36];
+	static unsigned char buf[36];
 	struct scatterlist *sg;
 	unsigned int i;
 	char *this_page;
