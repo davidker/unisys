@@ -631,7 +631,6 @@ visorbus_write_channel(struct visor_device *dev, unsigned long offset,
 }
 EXPORT_SYMBOL_GPL(visorbus_write_channel);
 
-static void visorbus_free_irq(struct visor_device *dev);
 static int visorbus_set_channel_features(struct visor_device *dev,
 					 u64 feature_bits);
 static int visorbus_clear_channel_features(struct visor_device *dev,
