@@ -484,11 +484,11 @@ struct spar_controlvm_parameters_header {
 
 /* General Errors------------------------------------------------------[0-99] */
 #define CONTROLVM_RESP_SUCCESS                                  0
-#define CONTROLVM_RESP_ERROR_ALREADY_DONE                       1
-#define CONTROLVM_RESP_ERROR_IOREMAP_FAILED                     2
-#define CONTROLVM_RESP_ERROR_KMALLOC_FAILED                     3
-#define CONTROLVM_RESP_ERROR_MESSAGE_ID_UNKNOWN                 4
-#define CONTROLVM_RESP_ERROR_MESSAGE_ID_INVALID_FOR_CLIENT      5
+#define CONTROLVM_RESP_ALREADY_DONE                             1
+#define CONTROLVM_RESP_IOREMAP_FAILED                           2
+#define CONTROLVM_RESP_KMALLOC_FAILED                           3
+#define CONTROLVM_RESP_ID_UNKNOWN                               4
+#define CONTROLVM_RESP_ID_INVALID_FOR_CLIENT                    5
 
 /* CONTROLVM_INIT_CHIPSET-------------------------------------------[100-199] */
 #define CONTROLVM_RESP_ERROR_CLIENT_SWITCHCOUNT_NONZERO         100
