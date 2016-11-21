@@ -899,7 +899,7 @@ my_device_create(struct controlvm_message *inmsg)
 		visorbus_log_postcode(CURRENT_FILE_PC, DEVICE_CREATE_FAILURE_PC,
 				      __LINE__, dev_no, bus_no,
 				      DIAG_SEVERITY_ERR);
-		rc = -CONTROLVM_RESP_ERROR_BUS_INVALID;
+		rc = -CONTROLVM_RESP_BUS_INVALID;
 		goto out_respond;
 	}
 
@@ -907,7 +907,7 @@ my_device_create(struct controlvm_message *inmsg)
 		visorbus_log_postcode(CURRENT_FILE_PC, DEVICE_CREATE_FAILURE_PC,
 				      __LINE__, dev_no, bus_no,
 				      DIAG_SEVERITY_ERR);
-		rc = -CONTROLVM_RESP_ERROR_BUS_INVALID;
+		rc = -CONTROLVM_RESP_BUS_INVALID;
 		goto out_respond;
 	}
 
@@ -999,14 +999,14 @@ my_device_changestate(struct controlvm_message *inmsg)
 		visorbus_log_postcode(CURRENT_FILE_PC,
 				      DEVICE_CHANGESTATE_FAILURE_PC, __LINE__,
 				      dev_no, bus_no, DIAG_SEVERITY_ERR);
-		rc = -CONTROLVM_RESP_ERROR_DEVICE_INVALID;
+		rc = -CONTROLVM_RESP_DEVICE_INVALID;
 		goto err_respond;
 	}
 	if (dev_info->state.created == 0) {
 		visorbus_log_postcode(CURRENT_FILE_PC,
 				      DEVICE_CHANGESTATE_FAILURE_PC, __LINE__,
 				      dev_no, bus_no, DIAG_SEVERITY_ERR);
-		rc = -CONTROLVM_RESP_ERROR_DEVICE_INVALID;
+		rc = -CONTROLVM_RESP_DEVICE_INVALID;
 		goto err_respond;
 	}
 	if (dev_info->pending_msg_hdr) {
@@ -1058,7 +1058,7 @@ my_device_destroy(struct controlvm_message *inmsg)
 
 	dev_info = visorbus_get_device_by_id(bus_no, dev_no, NULL);
 	if (!dev_info) {
-		rc = -CONTROLVM_RESP_ERROR_DEVICE_INVALID;
+		rc = -CONTROLVM_RESP_DEVICE_INVALID;
 		goto err_respond;
 	}
 	if (dev_info->state.created == 0) {
@@ -1112,10 +1112,10 @@ initialize_controlvm_payload_info(u64 phys_addr, u64 offset, u32 bytes,
 	u8 *payload = NULL;
 
 	if (!info)
-		return -CONTROLVM_RESP_ERROR_PAYLOAD_INVALID;
+		return -CONTROLVM_RESP_PAYLOAD_INVALID;
 
 	if ((offset == 0) || (bytes == 0))
-		return -CONTROLVM_RESP_ERROR_PAYLOAD_INVALID;
+		return -CONTROLVM_RESP_PAYLOAD_INVALID;
 
 	payload = memremap(phys_addr + offset, bytes, MEMREMAP_WB);
 	if (!payload)
@@ -2081,7 +2081,7 @@ parahotplug_process_list(void)
 		if (req->msg.hdr.flags.response_expected)
 			controlvm_respond_physdev_changestate(
 				&req->msg.hdr,
-				CONTROLVM_RESP_ERROR_DEVICE_UDEV_TIMEOUT,
+				CONTROLVM_RESP_DEVICE_UDEV_TIMEOUT,
 				req->msg.cmd.device_change_state.state);
 		parahotplug_request_destroy(req);
 	}
