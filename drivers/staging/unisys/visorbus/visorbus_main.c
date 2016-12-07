@@ -800,6 +800,7 @@ fix_vbus_dev_info(struct visor_device *visordev)
 		return;
 
 	bdev = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	/* Validate that s-Par backend gave a good bus */
 	if (!bdev)
 		return;
 	hdr_info = (struct spar_vbus_headerinfo *)bdev->vbus_hdr_info;
