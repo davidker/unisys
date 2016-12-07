@@ -808,6 +808,7 @@ bus_configure(struct controlvm_message *inmsg,
 		       DIAG_SEVERITY_PRINT);
 
 	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	/* Validate that s-Par backend gave a good bus */
 	if (!bus_info) {
 		POSTCODE_LINUX(BUS_CONFIGURE_FAILURE_PC, 0, bus_no,
 			       DIAG_SEVERITY_ERR);
@@ -862,6 +863,7 @@ my_device_create(struct controlvm_message *inmsg)
 	int err;
 
 	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	/* Validate that s-Par backend gave a good bus */
 	if (!bus_info) {
 		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, dev_no, bus_no,
 			       DIAG_SEVERITY_ERR);
