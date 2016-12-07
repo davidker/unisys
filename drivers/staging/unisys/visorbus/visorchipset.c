@@ -755,6 +755,7 @@ bus_destroy(struct controlvm_message *inmsg)
 	int err;
 
 	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	/* Validate that s-Par backend gave a good bus */
 	if (!bus_info) {
 		err = -ENODEV;
 		goto err_respond;
