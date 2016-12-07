@@ -17,7 +17,7 @@
 #ifndef __VISORBUS_PRIVATE_H__
 #define __VISORBUS_PRIVATE_H__
 
-#define VERSION "2.16.9.26"  /* visorbus driver version */
+#define VERSION "2.16.11.10"  /* visorbus driver version */
 
 #include <linux/uuid.h>
 

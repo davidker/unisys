@@ -26,7 +26,7 @@
 #include "visorbus.h"
 #include "iochannel.h"
 
-#define VERSION "2.16.9.26"  /* visorhba driver version */
+#define VERSION "2.16.11.10"  /* visorhba driver version */
 
 #define MAX_PENDING_REQUESTS	(MIN_NUMSIGNALS * 2)
 

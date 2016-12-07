@@ -27,7 +27,7 @@
 #include "visorbus.h"
 #include "iochannel.h"
 
-#define VERSION "2.16.9.26"  /* visornic driver version */
+#define VERSION "2.16.11.28"  /* visornic driver version */
 
 #define VISORNIC_INFINITE_RSP_WAIT 0
 
