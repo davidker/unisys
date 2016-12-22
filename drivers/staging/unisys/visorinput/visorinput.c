@@ -399,6 +399,19 @@ static void visorinput_channel_interrupt(struct visor_device *dev)
 	schedule_work(&devdata->interrupt_work);
 }
 
+static void
+enable_interrupts(struct visorinput_devdata *devdata)
+{
+	visorbus_enable_channel_interrupts(devdata->dev);
+}
+
+static void
+disable_interrupts(struct visorinput_devdata *devdata)
+{
+	visorbus_disable_channel_interrupts(devdata->dev);
+	cancel_work_sync(&devdata->interrupt_work);
+}
+
 static int visorinput_open(struct input_dev *visorinput_dev)
 {
 	struct visorinput_devdata *devdata = input_get_drvdata(visorinput_dev);
@@ -421,7 +434,7 @@ static int visorinput_open(struct input_dev *visorinput_dev)
 	devdata->interrupts_enabled = true;
 	if (devdata->paused)
 		goto out_unlock;
-	visorbus_enable_channel_interrupts(devdata->dev);
+	enable_interrupts(devdata);
 
 out_unlock:
 	mutex_unlock(&devdata->lock_visor_dev);
@@ -450,7 +463,7 @@ static void visorinput_close(struct input_dev *visorinput_dev)
 	devdata->interrupts_enabled = false;
 	if (devdata->paused)
 		goto out_unlock;
-	visorbus_disable_channel_interrupts(devdata->dev);
+	disable_interrupts(devdata);
 
 out_unlock:
 	mutex_unlock(&devdata->lock_visor_dev);
@@ -632,7 +645,7 @@ static struct visorinput_devdata *devdata_create(
 	 */
 	devdata->paused = false;
 	if (devdata->interrupts_enabled)
-		visorbus_enable_channel_interrupts(dev);
+		enable_interrupts(devdata);
 	mutex_unlock(&devdata->lock_visor_dev);
 
 	return devdata;
@@ -676,7 +689,7 @@ static void visorinput_remove(struct visor_device *dev)
 		return;
 
 	unregister_client_input(devdata->visorinput_dev);
-	visorbus_disable_channel_interrupts(dev);
+	disable_interrupts(devdata);
 
 	/*
 	 * Due to above, at this time no thread of execution will be
@@ -684,7 +697,6 @@ static void visorinput_remove(struct visor_device *dev)
 	 * because there are no devices to open.
 	 */
 
-	cancel_work_sync(&devdata->interrupt_work);
 	mutex_lock(&devdata->lock_visor_dev);
 	dev_set_drvdata(&dev->device, NULL);
 	mutex_unlock(&devdata->lock_visor_dev);
@@ -709,7 +721,7 @@ static int visorinput_pause(struct visor_device *dev,
 		goto out_locked;
 	}
 	if (devdata->interrupts_enabled)
-		visorbus_disable_channel_interrupts(dev);
+		disable_interrupts(devdata);
 
 	/*
 	 * due to above, at this time no thread of execution will be
@@ -748,7 +760,7 @@ static int visorinput_resume(struct visor_device *dev,
 	 * while the device was paused.
 	 */
 	if (devdata->interrupts_enabled)
-		visorbus_enable_channel_interrupts(dev);
+		enable_interrupts(devdata);
 
 	rc = 0;
 out_locked:
