@@ -462,6 +462,7 @@ dev_stop_periodic_work(struct visor_device *dev)
 		return;
 	del_timer_sync(&dev->timer);
 	dev->timer_active = false;
+	init_timer(&dev->timer);
 	put_device(&dev->device);
 }
 
