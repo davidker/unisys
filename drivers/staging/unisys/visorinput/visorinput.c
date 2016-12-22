@@ -33,7 +33,7 @@
 #include "visorbus.h"
 #include "ultrainputreport.h"
 
-#define VERSION "2.16.9.26"  /* visorinput driver version */
+#define VERSION "2.16.12.22"  /* visorinput driver version */
 
 /* Keyboard channel {c73416d0-b0b8-44af-b304-9d2ae99f1b3d} */
 #define SPAR_KEYBOARD_CHANNEL_PROTOCOL_UUID				\
