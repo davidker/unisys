@@ -697,11 +697,13 @@ static void visorinput_remove(struct visor_device *dev)
 	if (!devdata)
 		return;
 
+	unregister_client_input(devdata->visorinput_dev);
 	visorbus_disable_channel_interrupts(dev);
 
 	/*
-	 * due to above, at this time no thread of execution will be in
-	 * visorinput_channel_interrupt()
+	 * Due to above, at this time no thread of execution will be in
+	 *  visorinput_channel_interrupt().  Interrupts can NOT get enabled
+	 * because there are no devices to open.
 	 */
 
 	cancel_work_sync(&devdata->interrupt_work);
@@ -709,7 +711,6 @@ static void visorinput_remove(struct visor_device *dev)
 	dev_set_drvdata(&dev->device, NULL);
 	mutex_unlock(&devdata->lock_visor_dev);
 
-	unregister_client_input(devdata->visorinput_dev);
 	kfree(devdata);
 }
 
