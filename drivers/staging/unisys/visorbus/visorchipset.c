@@ -897,6 +897,7 @@ my_device_changestate(struct controlvm_message *inmsg)
 	int err;
 
 	dev_info = visorbus_get_device_by_id(bus_no, dev_no, NULL);
+	/* Validate that s-Par backend gave a good device */
 	if (!dev_info) {
 		POSTCODE_LINUX(DEVICE_CHANGESTATE_FAILURE_PC, dev_no, bus_no,
 			       DIAG_SEVERITY_ERR);
@@ -957,6 +958,7 @@ my_device_destroy(struct controlvm_message *inmsg)
 	int err;
 
 	dev_info = visorbus_get_device_by_id(bus_no, dev_no, NULL);
+	/* Validate that s-Par backend gave a good device */
 	if (!dev_info) {
 		err = -ENODEV;
 		goto err_respond;
