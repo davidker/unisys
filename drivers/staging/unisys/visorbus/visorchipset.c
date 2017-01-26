@@ -1181,7 +1181,7 @@ static const struct attribute_group *visorchipset_dev_groups[] = {
  * Cause uevent to run the user level script to do the disable/enable specified
  * in the parahotplug_request.
  */
-static void
+static int
 parahotplug_request_kickoff(struct parahotplug_request *req)
 {
 	struct controlvm_message_packet *cmd = &req->msg.cmd;
@@ -1202,8 +1202,8 @@ parahotplug_request_kickoff(struct parahotplug_request *req)
 	sprintf(env_func, "SPAR_PARAHOTPLUG_FUNCTION=%d",
 		cmd->device_change_state.dev_no & 0x7);
 
-	kobject_uevent_env(&chipset_dev->acpi_device->dev.kobj, KOBJ_CHANGE,
-			   envp);
+	return kobject_uevent_env(&chipset_dev->acpi_device->dev.kobj,
+				  KOBJ_CHANGE, envp);
 }
 
 /*
