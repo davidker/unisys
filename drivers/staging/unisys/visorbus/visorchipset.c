@@ -1386,6 +1386,7 @@ setup_crash_devices_work_queue(struct work_struct *work)
 	struct controlvm_message msg;
 	u32 local_crash_msg_offset;
 	u16 local_crash_msg_count;
+	int err;
 
 	POSTCODE_LINUX(CRASH_DEV_ENTRY_PC, 0, 0, DIAG_SEVERITY_PRINT);
 
@@ -1394,7 +1395,7 @@ setup_crash_devices_work_queue(struct work_struct *work)
 	msg.cmd.init_chipset.bus_count = 23;
 	msg.cmd.init_chipset.switch_count = 0;
 
-	chipset_init(&msg);
+	err = chipset_init(&msg);
 
 	/* get saved message count */
 	if (visorchannel_read(chipset_dev->controlvm_channel,
