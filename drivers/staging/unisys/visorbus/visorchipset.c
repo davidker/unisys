@@ -1009,7 +1009,7 @@ err_respond:
 
 #define PARAHOTPLUG_TIMEOUT_MS 2000
 
-/**
+/*
  * parahotplug_next_id() - generate unique int to match an outstanding
  *                         CONTROLVM message with a udev script /sys
  *                         response
@@ -1024,7 +1024,7 @@ parahotplug_next_id(void)
 	return atomic_inc_return(&id);
 }
 
-/**
+/*
  * parahotplug_next_expiration() - returns the time (in jiffies) when a
  *                                 CONTROLVM message on the list should expire
  *                                 -- PARAHOTPLUG_TIMEOUT_MS in the future
@@ -1037,7 +1037,7 @@ parahotplug_next_expiration(void)
 	return jiffies + msecs_to_jiffies(PARAHOTPLUG_TIMEOUT_MS);
 }
 
-/**
+/*
  * parahotplug_request_create() - create a parahotplug_request, which is
  *                                basically a wrapper for a CONTROLVM_MESSAGE
  *                                that we can stick on a list
@@ -1061,7 +1061,7 @@ parahotplug_request_create(struct controlvm_message *msg)
 	return req;
 }
 
-/**
+/*
  * parahotplug_request_destroy() - free a parahotplug_request
  * @req: the request to deallocate
  */
@@ -1074,7 +1074,7 @@ parahotplug_request_destroy(struct parahotplug_request *req)
 static LIST_HEAD(parahotplug_request_list);
 static DEFINE_SPINLOCK(parahotplug_request_list_lock);	/* lock for above */
 
-/**
+/*
  * parahotplug_request_complete() - mark request as complete
  * @id:     the id of the request
  * @active: indicates whether the request is assigned to active partition
@@ -1118,7 +1118,7 @@ parahotplug_request_complete(int id, u16 active)
 	return -EINVAL;
 }
 
-/**
+/*
  * devicedisabled_store() - disables the hotplug device
  * @dev:   sysfs interface variable not utilized in this function
  * @attr:  sysfs interface variable not utilized in this function
@@ -1148,7 +1148,7 @@ static ssize_t devicedisabled_store(struct device *dev,
 }
 static DEVICE_ATTR_WO(devicedisabled);
 
-/**
+/*
  * deviceenabled_store() - enables the hotplug device
  * @dev:   sysfs interface variable not utilized in this function
  * @attr:  sysfs interface variable not utilized in this function
@@ -1218,7 +1218,7 @@ static struct platform_device visorchipset_platform_device = {
 	.dev.release = visorchipset_dev_release,
 };
 
-/**
+/*
  * parahotplug_request_kickoff() - initiate parahotplug request
  * @req: the request to initiate
  *
@@ -1250,7 +1250,7 @@ parahotplug_request_kickoff(struct parahotplug_request *req)
 			   envp);
 }
 
-/**
+/*
  * parahotplug_process_message() - enables or disables a PCI device by kicking
  *                                 off a udev script
  * @inmsg: the message indicating whether to enable or disable
@@ -1724,7 +1724,7 @@ err_finish_ctx:
 	return NULL;
 }
 
-/**
+/*
  * handle_command() - process a controlvm message
  * @inmsg:        the message to process
  * @channel_addr: address of the controlvm channel
@@ -1838,7 +1838,7 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
 	return true;
 }
 
-/**
+/*
  * read_controlvm_event() - retreives the next message from the
  *                          CONTROLVM_QUEUE_EVENT queue in the controlvm
  *                          channel
@@ -1859,7 +1859,7 @@ read_controlvm_event(struct controlvm_message *msg)
 	return false;
 }
 
-/**
+/*
  * parahotplug_process_list() - remove any request from the list that's been on
  *                              there too long and respond with an error
  */
