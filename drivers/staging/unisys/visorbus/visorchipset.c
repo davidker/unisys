@@ -1972,6 +1972,7 @@ visorchipset_init(struct acpi_device *acpi_device)
 	int err = -ENODEV;
 	u64 addr;
 	uuid_le uuid = SPAR_CONTROLVM_CHANNEL_PROTOCOL_UUID;
+	struct visorchannel *controlvm_channel;
 
 	addr = controlvm_get_channel_address();
 	if (!addr)
@@ -1985,16 +1986,17 @@ visorchipset_init(struct acpi_device *acpi_device)
 
 	chipset_dev->acpi_device = acpi_device;
 	chipset_dev->poll_jiffies = POLLJIFFIES_CONTROLVMCHANNEL_FAST;
-	chipset_dev->controlvm_channel = visorchannel_create_with_lock(addr,
-							0, GFP_KERNEL, uuid);
+	controlvm_channel = visorchannel_create_with_lock(addr,
+							  0, GFP_KERNEL, uuid);
 
-	if (!chipset_dev->controlvm_channel)
-		goto error;
+	if (!controlvm_channel)
+		goto error_free_chipset_dev;
 
 	if (!SPAR_CONTROLVM_CHANNEL_OK_CLIENT(
 				visorchannel_get_header(controlvm_channel)))
 		goto error_destroy_channel;
 
+	chipset_dev->controlvm_channel = controlvm_channel;
 	major_dev = MKDEV(visorchipset_major, 0);
 	err = visorchipset_file_init(major_dev,
 				     &chipset_dev->controlvm_channel);
@@ -2039,6 +2041,9 @@ error_cancel_work:
 error_destroy_channel:
 	visorchannel_destroy(chipset_dev->controlvm_channel);
 
+error_free_chipset_dev:
+	kfree(chipset_dev);
+
 error:
 	POSTCODE_LINUX(CHIPSET_INIT_FAILURE_PC, 0, err, DIAG_SEVERITY_ERR);
 	return err;
@@ -2057,6 +2062,8 @@ visorchipset_exit(struct acpi_device *acpi_device)
 
 	visorchipset_file_cleanup(visorchipset_platform_device.dev.devt);
 	platform_device_unregister(&visorchipset_platform_device);
+
+	kfree(chipset_dev);
 	POSTCODE_LINUX(DRIVER_EXIT_PC, 0, 0, DIAG_SEVERITY_PRINT);
 
 	return 0;
