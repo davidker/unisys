@@ -42,13 +42,13 @@
 #define lengthof(TYPE, MEMBER) (sizeof(((TYPE *)0)->MEMBER))
 #endif
 #ifndef COVERQ
-#define COVERQ(v, d)  (((v) + (d) - 1) / (d))
+#define COVERQ(v, d) (((v) + (d) - 1) / (d))
 #endif
 #ifndef COVER
-#define COVER(v, d)   ((d) * COVERQ(v, d))
+#define COVER(v, d) ((d) * COVERQ(v, d))
 #endif
 
-#define ULTRA_CHANNEL_PROTOCOL_SIGNATURE  SIGNATURE_32('E', 'C', 'N', 'L')
+#define ULTRA_CHANNEL_PROTOCOL_SIGNATURE SIGNATURE_32('E', 'C', 'N', 'L')
 
 enum channel_serverstate {
 	CHANNELSRV_UNINITIALIZED = 0,	/* channel is in an undefined state */
@@ -78,7 +78,7 @@ enum channel_clientstate {
 #define SPAR_CHANNEL_SERVER_READY(ch) \
 	(readl(&(ch)->srv_state) == CHANNELSRV_READY)
 
-#define ULTRA_VALID_CHANNELCLI_TRANSITION(o, n)				\
+#define ULTRA_VALID_CHANNELCLI_TRANSITION(o, n) \
 	(((((o) == CHANNELCLI_DETACHED) && ((n) == CHANNELCLI_DISABLED)) || \
 	  (((o) == CHANNELCLI_ATTACHING) && ((n) == CHANNELCLI_DISABLED)) || \
 	  (((o) == CHANNELCLI_ATTACHED) && ((n) == CHANNELCLI_DISABLED)) || \
@@ -100,7 +100,7 @@ enum channel_clientstate {
 /* throttling invalid boot channel statetransition error due to client
  * disabled
  */
-#define ULTRA_CLIERRORBOOT_THROTTLEMSG_DISABLED    0x01
+#define ULTRA_CLIERRORBOOT_THROTTLEMSG_DISABLED 0x01
 
 /* throttling invalid boot channel statetransition error due to client
  * not attached
@@ -108,7 +108,7 @@ enum channel_clientstate {
 #define ULTRA_CLIERRORBOOT_THROTTLEMSG_NOTATTACHED 0x02
 
 /* throttling invalid boot channel statetransition error due to busy channel */
-#define ULTRA_CLIERRORBOOT_THROTTLEMSG_BUSY        0x04
+#define ULTRA_CLIERRORBOOT_THROTTLEMSG_BUSY 0x04
 
 /* Values for ULTRA_CHANNEL_PROTOCOL.Features: This define exists so
  * that windows guest can look at the FeatureFlags in the io channel,
@@ -214,18 +214,18 @@ struct signal_queue_header {
 	u8 filler[12];		/* Pad out to 64 byte cacheline */
 } __packed;
 
-#define spar_signal_init(chan, QHDRFLD, QDATAFLD, QDATATYPE, ver, typ)	\
-	do {								\
-		memset(&chan->QHDRFLD, 0, sizeof(chan->QHDRFLD));	\
-		chan->QHDRFLD.version = ver;				\
-		chan->QHDRFLD.chtype = typ;				\
-		chan->QHDRFLD.size = sizeof(chan->QDATAFLD);		\
-		chan->QHDRFLD.signal_size = sizeof(QDATATYPE);		\
+#define spar_signal_init(chan, QHDRFLD, QDATAFLD, QDATATYPE, ver, typ) \
+	do { \
+		memset(&chan->QHDRFLD, 0, sizeof(chan->QHDRFLD)); \
+		chan->QHDRFLD.version = ver; \
+		chan->QHDRFLD.chtype = typ; \
+		chan->QHDRFLD.size = sizeof(chan->QDATAFLD); \
+		chan->QHDRFLD.signal_size = sizeof(QDATATYPE); \
 		chan->QHDRFLD.sig_base_offset = (u64)(chan->QDATAFLD) -	\
-			(u64)(&chan->QHDRFLD);				\
-		chan->QHDRFLD.max_slots =				\
-			sizeof(chan->QDATAFLD) / sizeof(QDATATYPE);	\
-		chan->QHDRFLD.max_signals = chan->QHDRFLD.max_slots - 1;\
+			(u64)(&chan->QHDRFLD); \
+		chan->QHDRFLD.max_slots = \
+			sizeof(chan->QDATAFLD) / sizeof(QDATATYPE); \
+		chan->QHDRFLD.max_signals = chan->QHDRFLD.max_slots - 1; \
 	} while (0)
 
 /* Generic function useful for validating any type of channel when it is
@@ -395,8 +395,8 @@ unsigned char spar_signalqueue_empty(struct channel_header __iomem *ch,
 
 /* {414815ed-c58c-11da-95a9-00e08161165f} */
 #define SPAR_VHBA_CHANNEL_PROTOCOL_UUID \
-		UUID_LE(0x414815ed, 0xc58c, 0x11da, \
-				0x95, 0xa9, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f)
+	UUID_LE(0x414815ed, 0xc58c, 0x11da, \
+		0x95, 0xa9, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f)
 static const uuid_le spar_vhba_channel_protocol_uuid =
 	SPAR_VHBA_CHANNEL_PROTOCOL_UUID;
 #define SPAR_VHBA_CHANNEL_PROTOCOL_UUID_STR \
@@ -404,8 +404,8 @@ static const uuid_le spar_vhba_channel_protocol_uuid =
 
 /* {8cd5994d-c58e-11da-95a9-00e08161165f} */
 #define SPAR_VNIC_CHANNEL_PROTOCOL_UUID \
-		UUID_LE(0x8cd5994d, 0xc58e, 0x11da, \
-				0x95, 0xa9, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f)
+	UUID_LE(0x8cd5994d, 0xc58e, 0x11da, \
+		0x95, 0xa9, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f)
 static const uuid_le spar_vnic_channel_protocol_uuid =
 	SPAR_VNIC_CHANNEL_PROTOCOL_UUID;
 #define SPAR_VNIC_CHANNEL_PROTOCOL_UUID_STR \
@@ -413,21 +413,21 @@ static const uuid_le spar_vnic_channel_protocol_uuid =
 
 /* {72120008-4AAB-11DC-8530-444553544200} */
 #define SPAR_SIOVM_UUID \
-		UUID_LE(0x72120008, 0x4AAB, 0x11DC, \
-				0x85, 0x30, 0x44, 0x45, 0x53, 0x54, 0x42, 0x00)
+	UUID_LE(0x72120008, 0x4AAB, 0x11DC, \
+		0x85, 0x30, 0x44, 0x45, 0x53, 0x54, 0x42, 0x00)
 static const uuid_le spar_siovm_uuid = SPAR_SIOVM_UUID;
 
 /* {5b52c5ac-e5f5-4d42-8dff-429eaecd221f} */
-#define SPAR_CONTROLDIRECTOR_CHANNEL_PROTOCOL_UUID  \
-		UUID_LE(0x5b52c5ac, 0xe5f5, 0x4d42, \
-				0x8d, 0xff, 0x42, 0x9e, 0xae, 0xcd, 0x22, 0x1f)
+#define SPAR_CONTROLDIRECTOR_CHANNEL_PROTOCOL_UUID \
+	UUID_LE(0x5b52c5ac, 0xe5f5, 0x4d42, \
+		0x8d, 0xff, 0x42, 0x9e, 0xae, 0xcd, 0x22, 0x1f)
 
 static const uuid_le spar_controldirector_channel_protocol_uuid =
 	SPAR_CONTROLDIRECTOR_CHANNEL_PROTOCOL_UUID;
 
 /* {b4e79625-aede-4eAA-9e11-D3eddcd4504c} */
-#define SPAR_DIAG_POOL_CHANNEL_PROTOCOL_UUID				\
-		UUID_LE(0xb4e79625, 0xaede, 0x4eaa, \
-				0x9e, 0x11, 0xd3, 0xed, 0xdc, 0xd4, 0x50, 0x4c)
+#define SPAR_DIAG_POOL_CHANNEL_PROTOCOL_UUID \
+	UUID_LE(0xb4e79625, 0xaede, 0x4eaa, \
+		0x9e, 0x11, 0xd3, 0xed, 0xdc, 0xd4, 0x50, 0x4c)
 
 #endif
