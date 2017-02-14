@@ -46,27 +46,6 @@
 #define UNISYS_SPAR_ID_EDX 0x34367261
 
 /*
- * Module parameters
- */
-static int visorchipset_major;
-
-static int
-visorchipset_open(struct inode *inode, struct file *file)
-{
-	unsigned int minor_number = iminor(inode);
-
-	if (minor_number)
-		return -ENODEV;
-	return 0;
-}
-
-static int
-visorchipset_release(struct inode *inode, struct file *file)
-{
-	return 0;
-}
-
-/*
  * When the controlvm channel is idle for at least MIN_IDLE_SECONDS,
  * we switch to slow polling mode. As soon as we get a controlvm
  * message, we switch back to fast polling mode.
@@ -88,8 +67,6 @@ struct visorchipset_device {
 	/* when we got our last controlvm message */
 	unsigned long most_recent_message_jiffies;
 	struct delayed_work periodic_controlvm_work;
-	struct cdev file_cdev;
-	struct visorchannel **file_controlvm_channel;
 	struct visorchannel *controlvm_channel;
 	unsigned long controlvm_payload_bytes_buffered;
 	/*
@@ -111,9 +88,6 @@ struct parahotplug_request {
 	unsigned long expiration;
 	struct controlvm_message msg;
 };
-
-/* info for /dev/visorchipset */
-static dev_t major_dev = -1; /*< indicates major num for device */
 
 /* prototypes for attributes */
 static ssize_t toolaction_show(struct device *dev,
@@ -1519,46 +1493,6 @@ device_resume_response(struct visor_device *dev_info, int response)
 	dev_info->pending_msg_hdr = NULL;
 }
 
-static int
-visorchipset_mmap(struct file *file, struct vm_area_struct *vma)
-{
-	unsigned long physaddr = 0;
-	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
-	u64 addr = 0;
-
-	/* sv_enable_dfp(); */
-	if (offset & (PAGE_SIZE - 1))
-		return -ENXIO;	/* need aligned offsets */
-
-	switch (offset) {
-	case VISORCHIPSET_MMAP_CONTROLCHANOFFSET:
-		vma->vm_flags |= VM_IO;
-		if (!*chipset_dev->file_controlvm_channel)
-			return -ENXIO;
-
-		visorchannel_read
-			(*chipset_dev->file_controlvm_channel,
-			 offsetof(struct spar_controlvm_channel_protocol,
-				  gp_control_channel),
-			 &addr, sizeof(addr));
-		if (!addr)
-			return -ENXIO;
-
-		physaddr = (unsigned long)addr;
-		if (remap_pfn_range(vma, vma->vm_start,
-				    physaddr >> PAGE_SHIFT,
-				    vma->vm_end - vma->vm_start,
-				    /*pgprot_noncached */
-				    (vma->vm_page_prot))) {
-			return -EAGAIN;
-		}
-		break;
-	default:
-		return -ENXIO;
-	}
-	return 0;
-}
-
 static inline s64 issue_vmcall_query_guest_virtual_time_offset(void)
 {
 	u64 result = VMCALL_SUCCESS;
@@ -1575,79 +1509,6 @@ static inline int issue_vmcall_update_physical_time(u64 adjustment)
 
 	ISSUE_IO_VMCALL(VMCALL_UPDATE_PHYSICAL_TIME, adjustment, result);
 	return result;
-}
-
-static long visorchipset_ioctl(struct file *file, unsigned int cmd,
-			       unsigned long arg)
-{
-	u64 adjustment;
-	s64 vrtc_offset;
-
-	switch (cmd) {
-	case VMCALL_QUERY_GUEST_VIRTUAL_TIME_OFFSET:
-		/* get the physical rtc offset */
-		vrtc_offset = issue_vmcall_query_guest_virtual_time_offset();
-		if (copy_to_user((void __user *)arg, &vrtc_offset,
-				 sizeof(vrtc_offset))) {
-			return -EFAULT;
-		}
-		return 0;
-	case VMCALL_UPDATE_PHYSICAL_TIME:
-		if (copy_from_user(&adjustment, (void __user *)arg,
-				   sizeof(adjustment))) {
-			return -EFAULT;
-		}
-		return issue_vmcall_update_physical_time(adjustment);
-	default:
-		return -EFAULT;
-	}
-}
-
-static const struct file_operations visorchipset_fops = {
-	.owner = THIS_MODULE,
-	.open = visorchipset_open,
-	.read = NULL,
-	.write = NULL,
-	.unlocked_ioctl = visorchipset_ioctl,
-	.release = visorchipset_release,
-	.mmap = visorchipset_mmap,
-};
-
-static int
-visorchipset_file_init(dev_t major_dev, struct visorchannel **controlvm_channel)
-{
-	int rc = 0;
-
-	chipset_dev->file_controlvm_channel = controlvm_channel;
-	cdev_init(&chipset_dev->file_cdev, &visorchipset_fops);
-	chipset_dev->file_cdev.owner = THIS_MODULE;
-	if (MAJOR(major_dev) == 0) {
-		rc = alloc_chrdev_region(&major_dev, 0, 1, "visorchipset");
-		/* dynamic major device number registration required */
-		if (rc < 0)
-			return rc;
-	} else {
-		/* static major device number registration required */
-		rc = register_chrdev_region(major_dev, 1, "visorchipset");
-		if (rc < 0)
-			return rc;
-	}
-	rc = cdev_add(&chipset_dev->file_cdev,
-		      MKDEV(MAJOR(major_dev), 0), 1);
-	if (rc < 0) {
-		unregister_chrdev_region(major_dev, 1);
-		return rc;
-	}
-	return 0;
-}
-
-static void
-visorchipset_file_cleanup(dev_t major_dev)
-{
-	if (chipset_dev->file_cdev.ops)
-		cdev_del(&chipset_dev->file_cdev);
-	chipset_dev->file_cdev.ops = NULL;
-	unregister_chrdev_region(major_dev, 1);
 }
 
 static struct parser_context *
@@ -1987,12 +1848,6 @@ visorchipset_init(struct acpi_device *acpi_device)
 					      chipset_dev->controlvm_channel)))
 		goto error_destroy_channel;
 
-	major_dev = MKDEV(visorchipset_major, 0);
-	err = visorchipset_file_init(major_dev,
-				     &chipset_dev->controlvm_channel);
-	if (err < 0)
-		goto error_destroy_channel;
-
 	/* if booting in a crash kernel */
 	if (is_kdump_kernel())
 		INIT_DELAYED_WORK(&chipset_dev->periodic_controlvm_work,
@@ -2016,7 +1871,6 @@ visorchipset_init(struct acpi_device *acpi_device)
 
 error_cancel_work:
 	cancel_delayed_work_sync(&chipset_dev->periodic_controlvm_work);
-	visorchipset_file_cleanup(major_dev);
 
 error_destroy_channel:
 	visorchannel_destroy(chipset_dev->controlvm_channel);
@@ -2033,15 +1887,13 @@ static int
 visorchipset_exit(struct acpi_device *acpi_device)
 {
 	POSTCODE_LINUX(DRIVER_EXIT_PC, 0, 0, DIAG_SEVERITY_PRINT);
+
 	visorbus_exit();
 	cancel_delayed_work_sync(&chipset_dev->periodic_controlvm_work);
-
 	visorchannel_destroy(chipset_dev->controlvm_channel);
-	visorchipset_file_cleanup(chipset_dev->acpi_device->dev.devt);
-
 	kfree(chipset_dev);
-	POSTCODE_LINUX(DRIVER_EXIT_PC, 0, 0, DIAG_SEVERITY_PRINT);
 
+	POSTCODE_LINUX(DRIVER_EXIT_PC, 0, 0, DIAG_SEVERITY_PRINT);
 	return 0;
 }
 
@@ -2097,10 +1949,6 @@ static void exit_unisys(void)
 {
 	acpi_bus_unregister_driver(&unisys_acpi_driver);
 }
-
-module_param_named(major, visorchipset_major, int, 0444);
-MODULE_PARM_DESC(visorchipset_major,
-		 "major device number to use for the device node");
 
 module_init(init_unisys);
 module_exit(exit_unisys);
