@@ -204,12 +204,12 @@ struct signal_queue_header {
  * is used to pass the EFI_DIAG_CAPTURE_PROTOCOL needed to log messages.
  */
 static inline int
-spar_check_channel_client(void __iomem *ch,
-			  uuid_le expected_uuid,
-			  char *chname,
-			  u64 expected_min_bytes,
-			  u32 expected_version,
-			  u64 expected_signature)
+spar_check_channel(void __iomem *ch,
+		   uuid_le expected_uuid,
+		   char *chname,
+		   u64 expected_min_bytes,
+		   u32 expected_version,
+		   u64 expected_signature)
 {
 	if (uuid_le_cmp(expected_uuid, NULL_UUID_LE) != 0) {
 		uuid_le guid;
