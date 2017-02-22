@@ -1694,17 +1694,18 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
  *
  * Return: true if a valid message was retrieved or false otherwise
  */
-static bool
+static int
 read_controlvm_event(struct controlvm_message *msg)
 {
-	if (!visorchannel_signalremove(chipset_dev->controlvm_channel,
-				       CONTROLVM_QUEUE_EVENT, msg)) {
-		/* got a message */
-		if (msg->hdr.flags.test_message == 1)
-			return false;
-		return true;
-	}
-	return false;
+	int err;
+
+	err = visorchannel_signalremove(chipset_dev->controlvm_channel,
+					CONTROLVM_QUEUE_EVENT, msg);
+	/* got a message */
+	if (msg->hdr.flags.test_message == 1)
+		return -EINVAL;
+
+	return err;
 }
 
 /*
