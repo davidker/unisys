@@ -287,105 +287,6 @@ spar_check_channel_client(void __iomem *ch,
 	return 1;
 }
 
-/* Generic function useful for validating any type of channel when it is about
- * to be initialized by the server of the channel.
- * Note that <logCtx> is only needed for callers in the EFI environment, and
- * is used to pass the EFI_DIAG_CAPTURE_PROTOCOL needed to log messages.
- */
-static inline int spar_check_channel_server(uuid_le typeuuid, char *name,
-					    u64 expected_min_bytes,
-					    u64 actual_bytes)
-{
-	if (expected_min_bytes > 0)	/* verify channel size */
-		if (actual_bytes < expected_min_bytes) {
-			pr_err("Channel mismatch on channel=%s(%pUL) field=size expected=0x%-8.8llx actual=0x%-8.8llx\n",
-			       name, &typeuuid, expected_min_bytes,
-			       actual_bytes);
-			return 0;
-		}
-	return 1;
-}
-
-/*
- * Routine Description:
- * Tries to insert the prebuilt signal pointed to by pSignal into the nth
- * Queue of the Channel pointed to by pChannel
- *
- * Parameters:
- * pChannel: (IN) points to the IO Channel
- * Queue: (IN) nth Queue of the IO Channel
- * pSignal: (IN) pointer to the signal
- *
- * Assumptions:
- * - pChannel, Queue and pSignal are valid.
- * - If insertion fails due to a full queue, the caller will determine the
- * retry policy (e.g. wait & try again, report an error, etc.).
- *
- * Return value: 1 if the insertion succeeds, 0 if the queue was
- * full.
- */
-
-unsigned char spar_signal_insert(struct channel_header __iomem *ch, u32 queue,
-				 void *sig);
-
-/*
- * Routine Description:
- * Removes one signal from Channel pChannel's nth Queue at the
- * time of the call and copies it into the memory pointed to by
- * pSignal.
- *
- * Parameters:
- * pChannel: (IN) points to the IO Channel
- * Queue: (IN) nth Queue of the IO Channel
- * pSignal: (IN) pointer to where the signals are to be copied
- *
- * Assumptions:
- * - pChannel and Queue are valid.
- * - pSignal points to a memory area large enough to hold queue's SignalSize
- *
- * Return value: 1 if the removal succeeds, 0 if the queue was
- * empty.
- */
-
-unsigned char spar_signal_remove(struct channel_header __iomem *ch, u32 queue,
-				 void *sig);
-
-/*
- * Routine Description:
- * Removes all signals present in Channel pChannel's nth Queue at the
- * time of the call and copies them into the memory pointed to by
- * pSignal.  Returns the # of signals copied as the value of the routine.
- *
- * Parameters:
- * pChannel: (IN) points to the IO Channel
- * Queue: (IN) nth Queue of the IO Channel
- * pSignal: (IN) pointer to where the signals are to be copied
- *
- * Assumptions:
- * - pChannel and Queue are valid.
- * - pSignal points to a memory area large enough to hold Queue's MaxSignals
- * # of signals, each of which is Queue's SignalSize.
- *
- * Return value:
- * # of signals copied.
- */
-unsigned int spar_signal_remove_all(struct channel_header *ch, u32 queue,
-				    void *sig);
-
-/*
- * Routine Description:
- * Determine whether a signal queue is empty.
- *
- * Parameters:
- * pChannel: (IN) points to the IO Channel
- * Queue: (IN) nth Queue of the IO Channel
- *
- * Return value:
- * 1 if the signal queue is empty, 0 otherwise.
- */
-unsigned char spar_signalqueue_empty(struct channel_header __iomem *ch,
-				     u32 queue);
-
 /*
  * CHANNEL Guids
  */
@@ -413,14 +314,6 @@ static const uuid_le spar_vnic_channel_protocol_uuid =
 		UUID_LE(0x72120008, 0x4AAB, 0x11DC, \
 				0x85, 0x30, 0x44, 0x45, 0x53, 0x54, 0x42, 0x00)
 static const uuid_le spar_siovm_uuid = SPAR_SIOVM_UUID;
-
-/* {5b52c5ac-e5f5-4d42-8dff-429eaecd221f} */
-#define SPAR_CONTROLDIRECTOR_CHANNEL_PROTOCOL_UUID  \
-		UUID_LE(0x5b52c5ac, 0xe5f5, 0x4d42, \
-				0x8d, 0xff, 0x42, 0x9e, 0xae, 0xcd, 0x22, 0x1f)
-
-static const uuid_le spar_controldirector_channel_protocol_uuid =
-	SPAR_CONTROLDIRECTOR_CHANNEL_PROTOCOL_UUID;
 
 /* {b4e79625-aede-4eAA-9e11-D3eddcd4504c} */
 #define SPAR_DIAG_POOL_CHANNEL_PROTOCOL_UUID				\
