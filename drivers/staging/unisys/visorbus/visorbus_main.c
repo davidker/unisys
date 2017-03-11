@@ -93,7 +93,7 @@ visorbus_uevent(struct device *xdev, struct kobj_uevent_env *env)
  * @xdev: struct device for the device being matched
  * @xdrv: struct device_driver for driver to match device against
  *
- * Return: 1 iff the provided driver can control the specified device
+ * Return: 0 if 1 iff the provided driver can control the specified device
  */
 static int
 visorbus_match(struct device *xdev, struct device_driver *xdrv)
