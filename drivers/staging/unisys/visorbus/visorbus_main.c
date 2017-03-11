@@ -1263,7 +1263,7 @@ initiate_chipset_device_pause_resume(struct visor_device *dev, bool is_pause)
  * that device.  Success/failure result is returned asynchronously
  * via a callback function; see pause_state_change_complete().
  */
-void
+int
 chipset_device_pause(struct visor_device *dev_info)
 {
 	int err;
@@ -1272,8 +1272,10 @@ chipset_device_pause(struct visor_device *dev_info)
 
 	if (err < 0) {
 		dev_info->pausing = false;
-		device_pause_response(dev_info, err);
+		return err;
 	}
+
+	return 0;
 }
 
 /**
@@ -1284,7 +1286,7 @@ chipset_device_pause(struct visor_device *dev_info)
  * that device.  Success/failure result is returned asynchronously
  * via a callback function; see resume_state_change_complete().
  */
-void
+int
 chipset_device_resume(struct visor_device *dev_info)
 {
 	int err;
@@ -1292,9 +1294,11 @@ chipset_device_resume(struct visor_device *dev_info)
 	err = initiate_chipset_device_pause_resume(dev_info, false);
 
 	if (err < 0) {
-		device_resume_response(dev_info, err);
 		dev_info->resuming = false;
+		return err;
 	}
+
+	return 0;
 }
 
 int
