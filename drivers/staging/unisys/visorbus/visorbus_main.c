@@ -92,7 +92,7 @@ visorbus_uevent(struct device *xdev, struct kobj_uevent_env *env)
  * @xdev: struct device for the device being matched
  * @xdrv: struct device_driver for driver to match device against
  *
- * Return: 1 iff the provided driver can control the specified device
+ * Return: 0 if 1 iff the provided driver can control the specified device
  */
 static int
 visorbus_match(struct device *xdev, struct device_driver *xdrv)
@@ -642,8 +642,10 @@ create_visor_device(struct visor_device *dev)
 	 * (NOT bus instance).  That's why we need to include the bus
 	 * number within the name.
 	 */
-	dev_set_name(&dev->device, "vbus%u:dev%u",
-		     chipset_bus_no, chipset_dev_no);
+	err = dev_set_name(&dev->device, "vbus%u:dev%u",
+			   chipset_bus_no, chipset_dev_no);
+	if (err)
+		goto err_put;
 
 	/*
 	 * device_add does this:
