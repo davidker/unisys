@@ -1036,25 +1036,29 @@ create_bus_instance(struct visor_device *dev)
 		goto err_debugfs_dir;
 	}
 
-	if (device_register(&dev->device) < 0) {
+	err = device_register(&dev->device);
+	if (err < 0) {
 		POSTCODE_LINUX(DEVICE_CREATE_FAILURE_PC, 0, id,
 			       DIAG_SEVERITY_ERR);
-		err = -ENODEV;
 		goto err_debugfs_created;
 	}
 
-	if (get_vbus_header_info(dev->visorchannel, hdr_info) >= 0) {
-		dev->vbus_hdr_info = (void *)hdr_info;
-		write_vbus_chp_info(dev->visorchannel, hdr_info,
-				    &chipset_driverinfo);
-		write_vbus_bus_info(dev->visorchannel, hdr_info,
-				    &clientbus_driverinfo);
-	} else {
-		kfree(hdr_info);
-	}
+	err = get_vbus_header_info(dev->visorchannel, hdr_info);
+	if (err < 0)
+		goto err_device_unregister;
+
+	dev->vbus_hdr_info = (void *)hdr_info;
+	write_vbus_chp_info(dev->visorchannel, hdr_info,
+			    &chipset_driverinfo);
+	write_vbus_bus_info(dev->visorchannel, hdr_info,
+			    &clientbus_driverinfo);
+
 	list_add_tail(&dev->list_all, &list_all_bus_instances);
 	dev_set_drvdata(&dev->device, dev);
 	return 0;
+
+err_device_unregister:
+	device_unregister(&dev->device);
 
 err_debugfs_created:
 	debugfs_remove(dev->debugfs_client_bus_info);
