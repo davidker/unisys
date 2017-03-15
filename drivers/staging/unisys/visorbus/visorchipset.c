@@ -1349,6 +1349,8 @@ setup_crash_devices_work_queue(struct work_struct *work)
 	u32 local_crash_msg_offset;
 	u16 local_crash_msg_count;
 
+	pr_err("GGG: Entered setup_crash_devices_work_queue()\n");
+
 	POSTCODE_LINUX(CRASH_DEV_ENTRY_PC, 0, 0, DIAG_SEVERITY_PRINT);
 
 	/* send init chipset msg */
@@ -1795,6 +1797,8 @@ visorchipset_init(struct acpi_device *acpi_device)
 	u64 addr;
 	uuid_le uuid = SPAR_CONTROLVM_CHANNEL_PROTOCOL_UUID;
 	struct visorchannel *controlvm_channel;
+
+	pr_err("GGG: Entered visorchipset_init()\n");
 
 	addr = controlvm_get_channel_address();
 	if (!addr)
