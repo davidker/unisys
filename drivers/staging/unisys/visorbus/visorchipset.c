@@ -1404,11 +1404,28 @@ issue_vmcall_io_controlvm_addr(u64 *control_addr, u32 *control_bytes)
 	return 0;
 }
 
+static __init uint32_t visorutil_spar_detect(void)
+{
+	unsigned int eax, ebx, ecx, edx;
+
+	if (boot_cpu_has(X86_FEATURE_HYPERVISOR)) {
+		/* check the ID */
+		cpuid(UNISYS_SPAR_LEAF_ID, &eax, &ebx, &ecx, &edx);
+		return  (ebx == UNISYS_SPAR_ID_EBX) &&
+			(ecx == UNISYS_SPAR_ID_ECX) &&
+			(edx == UNISYS_SPAR_ID_EDX);
+	} else {
+		return 0;
+	}
+}
+
 static u64 controlvm_get_channel_address(void)
 {
 	u64 addr = 0;
 	u32 size = 0;
 
+	if (!visorutil_spar_detect())
+		return 0;
 	if (issue_vmcall_io_controlvm_addr(&addr, &size))
 		return 0;
 
@@ -1918,14 +1935,9 @@ visorchipset_init(struct acpi_device *acpi_device)
 
 	POSTCODE_LINUX(CHIPSET_INIT_SUCCESS_PC, 0, 0, DIAG_SEVERITY_PRINT);
 
-	err = visorbus_init();
-	if (err < 0)
-		goto error_cancel_work;
+	visorbus_init();
 
 	return 0;
-
-error_cancel_work:
-	cancel_delayed_work_sync(&chipset_dev->periodic_controlvm_work);
 
 error_delete_groups:
 	sysfs_remove_groups(&chipset_dev->acpi_device->dev.kobj,
@@ -1978,31 +1990,18 @@ static struct acpi_driver unisys_acpi_driver = {
 
 MODULE_DEVICE_TABLE(acpi, unisys_device_ids);
 
-static __init uint32_t visorutil_spar_detect(void)
-{
-	unsigned int eax, ebx, ecx, edx;
-
-	if (boot_cpu_has(X86_FEATURE_HYPERVISOR)) {
-		/* check the ID */
-		cpuid(UNISYS_SPAR_LEAF_ID, &eax, &ebx, &ecx, &edx);
-		return  (ebx == UNISYS_SPAR_ID_EBX) &&
-			(ecx == UNISYS_SPAR_ID_ECX) &&
-			(edx == UNISYS_SPAR_ID_EDX);
-	} else {
-		return 0;
-	}
-}
-
 static int init_unisys(void)
 {
 	int result;
 
-	if (!visorutil_spar_detect())
+	if (bus_register(&visorbus_type) < 0)
 		return -ENODEV;
 
 	result = acpi_bus_register_driver(&unisys_acpi_driver);
-	if (result)
+	if (result) {
+		bus_unregister(&visorbus_type);
 		return -ENODEV;
+	}
 
 	pr_info("Unisys Visorchipset Driver Loaded.\n");
 	return 0;

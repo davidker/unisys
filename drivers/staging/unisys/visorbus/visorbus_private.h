@@ -41,7 +41,7 @@ void device_destroy_response(struct visor_device *p, int response);
 void device_resume_response(struct visor_device *p, int response);
 void device_pause_response(struct visor_device *p, int response);
 
-int visorbus_init(void);
+void visorbus_init(void);
 void visorbus_exit(void);
 
 /* visorchannel access functions */
