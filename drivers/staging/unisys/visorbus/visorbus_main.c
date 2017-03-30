@@ -959,6 +959,9 @@ visordriver_probe_device(struct device *xdev)
  */
 int visorbus_register_visor_driver(struct visor_driver *drv)
 {
+	if (!visorbus_type.p)
+		return -ENODEV;
+
 	drv->driver.name = drv->name;
 	drv->driver.bus = &visorbus_type;
 	drv->driver.probe = visordriver_probe_device;
