@@ -337,12 +337,7 @@ signalinsert_inner(struct visorchannel *channel, u32 queue, void *msg)
 	sig_hdr.head = (sig_hdr.head + 1) % sig_hdr.max_slots;
 	if (sig_hdr.head == sig_hdr.tail) {
 		sig_hdr.num_overflows++;
-		err = visorchannel_write(channel,
-			   SIG_QUEUE_OFFSET(&channel->chan_hdr, queue) +
-			   offsetof(struct signal_queue_header,
-				    num_overflows),
-			   &sig_hdr.num_overflows,
-			   sizeof(sig_hdr.num_overflows));
+		err = SIG_WRITE_FIELD(channel, queue, &sig_hdr, num_overflows);
 		if (err)
 			return err;
 	}
