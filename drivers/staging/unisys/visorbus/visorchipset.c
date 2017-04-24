@@ -573,7 +573,7 @@ device_changestate_responder(enum controlvm_id cmd_id,
 }
 
 static int
-bus_create(struct controlvm_message *inmsg)
+visorbus_create(struct controlvm_message *inmsg)
 {
 	struct controlvm_message_packet *cmd = &inmsg->cmd;
 	struct controlvm_message_header *pmsg_hdr = NULL;
@@ -654,7 +654,7 @@ err_respond:
 }
 
 static int
-bus_destroy(struct controlvm_message *inmsg)
+visorbus_destroy(struct controlvm_message *inmsg)
 {
 	struct controlvm_message_packet *cmd = &inmsg->cmd;
 	struct controlvm_message_header *pmsg_hdr = NULL;
@@ -1438,7 +1438,7 @@ setup_crash_devices_work_queue(struct work_struct *work)
 			"no valid create_bus message\n");
 		return;
 	}
-	bus_create(&local_crash_bus_msg);
+	visorbus_create(&local_crash_bus_msg);
 
 	/* reuse create device message for storage device */
 	if (!local_crash_dev_msg.cmd.create_device.channel_addr) {
@@ -1634,10 +1634,10 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
 		err = chipset_init(&inmsg);
 		break;
 	case CONTROLVM_BUS_CREATE:
-		err = bus_create(&inmsg);
+		err = visorbus_create(&inmsg);
 		break;
 	case CONTROLVM_BUS_DESTROY:
-		err = bus_destroy(&inmsg);
+		err = visorbus_destroy(&inmsg);
 		break;
 	case CONTROLVM_BUS_CONFIGURE:
 		err = bus_configure(&inmsg, parser_ctx);
