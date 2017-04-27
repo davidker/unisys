@@ -1596,11 +1596,11 @@ handle_command(struct controlvm_message inmsg, u64 channel_addr)
 	struct controlvm_message ackmsg;
 	int err = 0;
 
-	/* create parsing context if necessary */
-	local_addr = (inmsg.hdr.flags.test_message == 1);
 	if (channel_addr == 0)
 		return -EINVAL;
 
+	/* create parsing context if necessary */
+	local_addr = (inmsg.hdr.flags.test_message == 1);
 	parm_addr = channel_addr + inmsg.hdr.payload_vm_offset;
 	parm_bytes = inmsg.hdr.payload_bytes;
 
