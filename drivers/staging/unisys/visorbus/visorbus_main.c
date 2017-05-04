@@ -28,7 +28,8 @@
 #define CURRENT_FILE_PC VISOR_BUS_PC_visorbus_main_c
 #define POLLJIFFIES_NORMALCHANNEL 10
 
-static bool initialized; /* stores whether bus_registration was successful */
+/* stores whether bus_registration was successful */
+static bool initialized;
 static struct dentry *visorbus_debugfs_dir;
 
 /*
@@ -369,8 +370,9 @@ static void
 vbuschannel_print_devinfo(struct visor_vbus_deviceinfo *devinfo,
 			  struct seq_file *seq, int devix)
 {
+	/* uninitialized vbus device entry */
 	if (!isprint(devinfo->devtype[0]))
-		return; /* uninitialized vbus device entry */
+		return;
 
 	if (devix >= 0)
 		seq_printf(seq, "[%d]", devix);
@@ -664,7 +666,8 @@ create_visor_device(struct visor_device *dev)
 		goto err_put;
 
 	list_add_tail(&dev->list_all, &list_all_device_instances);
-	return 0; /* success: reference kept via unmatched get_device() */
+	/* success: reference kept via unmatched get_device() */
+	return 0;
 
 err_put:
 	put_device(&dev->device);
@@ -952,8 +955,9 @@ visordriver_probe_device(struct device *xdev)
  */
 int visorbus_register_visor_driver(struct visor_driver *drv)
 {
+	/* can't register on a nonexistent bus */
 	if (!initialized)
-		return -ENODEV; /* can't register on a nonexistent bus */
+		return -ENODEV;
 
 	drv->driver.name = drv->name;
 	drv->driver.bus = &visorbus_type;
