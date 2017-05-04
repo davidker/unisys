@@ -26,11 +26,11 @@
 #define VISOR_CONTROLVM_CHANNEL_SIGNATURE VISOR_CHANNEL_SIGNATURE
 #define CONTROLVM_MESSAGE_MAX 64
 
-/* Must increment this whenever you insert or delete fields within
- * this channel struct.  Also increment whenever you change the meaning
- * of fields within this channel struct so as to break pre-existing
- * software.  Note that you can usually add fields to the END of the
- * channel struct withOUT needing to increment this.
+/* Must increment this whenever you insert or delete fields within this channel
+ * struct.  Also increment whenever you change the meaning of fields within this
+ * channel struct so as to break pre-existing software. Note that you can
+ * usually add fields to the END of the channel struct withOUT needing to
+ * increment this.
  */
 #define VISOR_CONTROLVM_CHANNEL_VERSIONID 1
 
@@ -70,9 +70,9 @@ struct visor_segment_state  {
 	u16 operating:1;
 	/* Natural alignment*/
 	u16 reserved:8;
-/* Note: don't use high bit unless we need to switch to ushort
- * which is non-compliant
- */
+	/* Note: don't use high bit unless we need to switch to ushort which is
+	 * non-compliant
+	 */
 } __packed;
 
 static const struct visor_segment_state segment_state_running = {
@@ -89,72 +89,86 @@ static const struct visor_segment_state segment_state_standby = {
 
 /* Ids for commands that may appear in either queue of a ControlVm channel.
  *
- *  Commands that are initiated by the command partition (CP), by an IO or
- *  console service partition (SP), or by a guest partition (GP)are:
- *  - issued on the RequestQueue queue (q #0) in the ControlVm channel
- *  - responded to on the ResponseQueue queue (q #1) in the ControlVm channel
+ * Commands that are initiated by the command partition (CP), by an IO or
+ * console service partition (SP), or by a guest partition (GP) are:
+ * - issued on the RequestQueue queue (q #0) in the ControlVm channel
+ * - responded to on the ResponseQueue queue (q #1) in the ControlVm channel
  *
- *  Events that are initiated by an IO or console service partition (SP) or
- *  by a guest partition (GP) are:
- *  - issued on the EventQueue queue (q #2) in the ControlVm channel
- *  - responded to on the EventAckQueue queue (q #3) in the ControlVm channel
+ * Events that are initiated by an IO or console service partition (SP) or
+ * by a guest partition (GP) are:
+ * - issued on the EventQueue queue (q #2) in the ControlVm channel
+ * - responded to on the EventAckQueue queue (q #3) in the ControlVm channel
  */
 enum controlvm_id {
 	CONTROLVM_INVALID = 0,
 	/* SWITCH commands required Parameter: SwitchNumber */
 	/* BUS commands required Parameter: BusNumber */
-	CONTROLVM_BUS_CREATE = 0x101,			/* CP --> SP, GP */
-	CONTROLVM_BUS_DESTROY = 0x102,			/* CP --> SP, GP */
-	CONTROLVM_BUS_CONFIGURE = 0x104,		/* CP --> SP */
-	CONTROLVM_BUS_CHANGESTATE = 0x105,		/* CP --> SP, GP */
-	CONTROLVM_BUS_CHANGESTATE_EVENT = 0x106,	/* SP, GP --> CP */
-/* DEVICE commands required Parameter: BusNumber, DeviceNumber */
-
-	CONTROLVM_DEVICE_CREATE = 0x201,		/* CP --> SP, GP */
-	CONTROLVM_DEVICE_DESTROY = 0x202,		/* CP --> SP, GP */
-	CONTROLVM_DEVICE_CONFIGURE = 0x203,		/* CP --> SP */
-	CONTROLVM_DEVICE_CHANGESTATE = 0x204,		/* CP --> SP, GP */
-	CONTROLVM_DEVICE_CHANGESTATE_EVENT = 0x205,	/* SP, GP --> CP */
-	CONTROLVM_DEVICE_RECONFIGURE = 0x206,		/* CP --> Boot */
-/* CHIPSET commands */
-	CONTROLVM_CHIPSET_INIT = 0x301,			/* CP --> SP, GP */
-	CONTROLVM_CHIPSET_STOP = 0x302,			/* CP --> SP, GP */
-	CONTROLVM_CHIPSET_READY = 0x304,		/* CP --> SP */
-	CONTROLVM_CHIPSET_SELFTEST = 0x305,		/* CP --> SP */
-
+	/* CP --> SP, GP */
+	CONTROLVM_BUS_CREATE = 0x101,
+	/* CP --> SP, GP */
+	CONTROLVM_BUS_DESTROY = 0x102,
+	/* CP --> SP */
+	CONTROLVM_BUS_CONFIGURE = 0x104,
+	/* CP --> SP, GP */
+	CONTROLVM_BUS_CHANGESTATE = 0x105,
+	/* SP, GP --> CP */
+	CONTROLVM_BUS_CHANGESTATE_EVENT = 0x106,
+	/* DEVICE commands required Parameter: BusNumber, DeviceNumber */
+	/* CP --> SP, GP */
+	CONTROLVM_DEVICE_CREATE = 0x201,
+	/* CP --> SP, GP */
+	CONTROLVM_DEVICE_DESTROY = 0x202,
+	/* CP --> SP */
+	CONTROLVM_DEVICE_CONFIGURE = 0x203,
+	/* CP --> SP, GP */
+	CONTROLVM_DEVICE_CHANGESTATE = 0x204,
+	/* SP, GP --> CP */
+	CONTROLVM_DEVICE_CHANGESTATE_EVENT = 0x205,
+	/* CP --> Boot */
+	CONTROLVM_DEVICE_RECONFIGURE = 0x206,
+	/* CHIPSET commands */
+	/* CP --> SP, GP */
+	CONTROLVM_CHIPSET_INIT = 0x301,
+	/* CP --> SP, GP */
+	CONTROLVM_CHIPSET_STOP = 0x302,
+	/* CP --> SP */
+	CONTROLVM_CHIPSET_READY = 0x304,
+	/* CP --> SP */
+	CONTROLVM_CHIPSET_SELFTEST = 0x305,
 };
 
 struct irq_info {
 	u64 reserved1;
-
-	 /* specifies interrupt handle. It is used to retrieve the
-	  *   corresponding interrupt pin from Monitor; and the
-	  *   interrupt pin is used to connect to the corresponding
-	  *   interrupt.  Used by IOPart-GP only.
-	  */
+	/* Specifies interrupt handle. It is used to retrieve the corresponding
+	 * interrupt pin from Monitor; and the interrupt pin is used to connect
+	 * to the corresponding interrupt. Used by IOPart-GP only.
+	 */
 	u64 recv_irq_handle;
-
-	 /* specifies interrupt vector. It, interrupt pin, and shared are
-	  *   used to connect to the corresponding interrupt.  Used by
-	  *   IOPart-GP only.
-	  */
+	/* Specifies interrupt vector. It, interrupt pin, and shared are used to
+	 * connect to the corresponding interrupt. Used by IOPart-GP only.
+	 */
 	u32 recv_irq_vector;
-
-    /* specifies if the recvInterrupt is shared.  It, interrupt pin
-     * and vector are used to connect to 0 = not shared; 1 = shared.
-     * the corresponding interrupt.  Used by IOPart-GP only.
-     */
+	/* Specifies if the recvInterrupt is shared.  It, interrupt pin and
+	 * vector are used to connect to 0 = not shared; 1 = shared the
+	 * corresponding interrupt. Used by IOPart-GP only.
+	 */
 	u8 recv_irq_shared;
-	u8 reserved[3];	/* Natural alignment purposes */
+	/* Natural alignment purposes */
+	u8 reserved[3];
 } __packed;
 
 struct efi_visor_indication  {
-	u64 boot_to_fw_ui:1;		/* Bit 0: Stop in uefi ui */
-	u64 clear_nvram:1;		/* Bit 1: Clear NVRAM */
-	u64 clear_cmos:1;		/* Bit 2: Clear CMOS */
-	u64 boot_to_tool:1;		/* Bit 3: Run install tool */
-	/* remaining bits are available */
-	u64 reserved:60;		/* Natural alignment */
+	/* Bit 0: Stop in uefi ui */
+	u64 boot_to_fw_ui:1;
+	/* Bit 1: Clear NVRAM */
+	u64 clear_nvram:1;
+	/* Bit 2: Clear CMOS */
+	u64 clear_cmos:1;
+	/* Bit 3: Run install tool */
+	u64 boot_to_tool:1;
+	/* Remaining bits are available */
+	/* Natural alignment */
+	u64 reserved:60;
 } __packed;
 
 enum visor_chipset_feature {
@@ -168,10 +182,10 @@ enum visor_chipset_feature {
  *  looking at the flags.response field.
  */
 struct controlvm_message_header  {
-	u32 id;		/* See CONTROLVM_ID. */
+	/* See CONTROLVM_ID. */
+	u32 id;
 	/* For requests, indicates the message type. */
 	/* For responses, indicates the type of message we are responding to. */
-
 	/* Includes size of this struct + size of message */
 	u32 message_size;
 	/* Index of segment containing Vm message/information */
@@ -204,102 +218,127 @@ struct controlvm_message_header  {
 	u32 reserved;
 	/* Identifies the particular message instance */
 	u64 message_handle;
-	/* request instances with the corresponding response instance. */
+	/* Request instances with the corresponding response instance. */
 	/* Offset of payload area from start of this instance */
 	u64 payload_vm_offset;
 	/* Maximum bytes allocated in payload area of ControlVm segment */
 	u32 payload_max_bytes;
 	/* Actual number of bytes of payload area to copy between IO/Command */
-	u32 payload_bytes;
 	/* if non-zero, there is a payload to copy. */
+	u32 payload_bytes;
 } __packed;
 
+/* for CONTROLVM_DEVICE_CREATE */
 struct controlvm_packet_device_create  {
-	u32 bus_no;		/* bus # (0..n-1) from the msg receiver's end */
-	u32 dev_no;		/* bus-relative (0..n-1) device number */
+	/* Bus # (0..n-1) from the msg receiver's end */
+	u32 bus_no;
+	/* Bus-relative (0..n-1) device number */
+	u32 dev_no;
 	/* Guest physical address of the channel, which can be dereferenced by
 	 * the receiver of this ControlVm command
 	 */
 	u64 channel_addr;
-	u64 channel_bytes;	/* specifies size of the channel in bytes */
-	uuid_le data_type_uuid;	/* specifies format of data in channel */
-	uuid_le dev_inst_uuid;	/* instance guid for the device */
-	struct irq_info intr;	/* specifies interrupt information */
-} __packed;	/* for CONTROLVM_DEVICE_CREATE */
+	/* Specifies size of the channel in bytes */
+	u64 channel_bytes;
+	/* Specifies format of data in channel */
+	uuid_le data_type_uuid;
+	/* Instance guid for the device */
+	uuid_le dev_inst_uuid;
+	/* Specifies interrupt information */
+	struct irq_info intr;
+} __packed;
 
+/* for CONTROLVM_DEVICE_CONFIGURE */
 struct controlvm_packet_device_configure  {
-	/* bus # (0..n-1) from the msg receiver's perspective */
+	/* Bus # (0..n-1) from the msg receiver's perspective */
 	u32 bus_no;
 	/* Control uses header SegmentIndex field to access bus number... */
-	u32 dev_no;	      /* bus-relative (0..n-1) device number */
-} __packed;	/* for CONTROLVM_DEVICE_CONFIGURE */
-
+	/* Bus-relative (0..n-1) device number */
+	u32 dev_no;
+} __packed;
+/* total 128 bytes */
 struct controlvm_message_device_create {
 	struct controlvm_message_header header;
 	struct controlvm_packet_device_create packet;
-} __packed;	/* total 128 bytes */
-
+} __packed;
+/* total 56 bytes */
 struct controlvm_message_device_configure  {
 	struct controlvm_message_header header;
 	struct controlvm_packet_device_configure packet;
-} __packed;	/* total 56 bytes */
+} __packed;
 
 /* This is the format for a message in any ControlVm queue. */
 struct controlvm_message_packet  {
 	union  {
+		/* For CONTROLVM_BUS_CREATE */
 		struct  {
-	/* bus # (0..n-1) from the msg receiver's perspective */
+			/* Bus # (0..n-1) from the msg receiver's perspective */
 			u32 bus_no;
-	/* indicates the max number of devices on this bus */
+			/* indicates the max number of devices on this bus */
 			u32 dev_count;
-	/* Guest physical address of the channel, which can be
-	 * dereferenced by the receiver of this ControlVm command
-	 */
+			/* Guest physical address of the channel, which can be
+			 * dereferenced by the receiver of this ControlV
+			 * command
+			 */
 			u64 channel_addr;
-			u64 channel_bytes;	/* size of the channel */
-	/* indicates format of data in bus channel*/
+			/* Size of the channel */
+			u64 channel_bytes;
+			/* Indicates format of data in bus channel*/
 			uuid_le bus_data_type_uuid;
-			uuid_le bus_inst_uuid;	/* instance uuid for the bus */
-		} __packed create_bus;	/* for CONTROLVM_BUS_CREATE */
+			/* Instance uuid for the bus */
+			uuid_le bus_inst_uuid;
+		} __packed create_bus;
+		/* For CONTROLVM_BUS_DESTROY */
 		struct  {
-	/* bus # (0..n-1) from the msg receiver's perspective */
+			/* Bus # (0..n-1) from the msg receiver's perspective */
 			u32 bus_no;
-			u32 reserved;	/* Natural alignment purposes */
-		} __packed destroy_bus;	/* for CONTROLVM_BUS_DESTROY */
+			/* Natural alignment purposes */
+			u32 reserved;
+		} __packed destroy_bus;
+		/* For CONTROLVM_BUS_CONFIGURE */
 		struct  {
-	/* bus # (0..n-1) from the receiver's perspective */
+			/* Bus # (0..n-1) from the receiver's perspective */
 			u32 bus_no;
-			u32 reserved1;	/* for alignment purposes */
-	/* This is used to convert guest physical address to physical address */
+			/* For alignment purposes */
+			u32 reserved1;
+			/* This is used to convert guest physical address to
+			 * physical address
+			 */
 			u64 guest_handle;
 			u64 recv_bus_irq_handle;
-				/* specifies interrupt info. It is used by SP
-				 * to register to receive interrupts from the
-				 * CP. This interrupt is used for bus level
-				 * notifications.  The corresponding
-				 * sendBusInterruptHandle is kept in CP.
-				 */
-		} __packed configure_bus;      /* for CONTROLVM_BUS_CONFIGURE */
-		/* for CONTROLVM_DEVICE_CREATE */
+			/* Specifies interrupt info. It is used by SP to
+			 * register to receive interrupts from the CP.
+			 * This interrupt is used for bus level notifications.
+			 * The corresponding sendBusInterruptHandle is kept in
+			 * CP.
+			 */
+		} __packed configure_bus;
+		/* For CONTROLVM_DEVICE_CREATE */
 		struct controlvm_packet_device_create create_device;
+		/* For CONTROLVM_DEVICE_DESTROY */
 		struct  {
-		/* bus # (0..n-1) from the msg receiver's perspective */
+			/* Bus # (0..n-1) from the msg receiver's perspective */
 			u32 bus_no;
-			u32 dev_no;	/* bus-relative (0..n-1) device # */
-		} __packed destroy_device;    /* for CONTROLVM_DEVICE_DESTROY */
-		/* for CONTROLVM_DEVICE_CONFIGURE */
+			/* Bus-relative (0..n-1) device # */
+			u32 dev_no;
+		} __packed destroy_device;
+		/* For CONTROLVM_DEVICE_CONFIGURE */
 		struct controlvm_packet_device_configure configure_device;
+		/* For CONTROLVM_DEVICE_RECONFIGURE */
 		struct  {
-		/* bus # (0..n-1) from the msg receiver's perspective */
+			/* Bus # (0..n-1) from the msg receiver's perspective */
 			u32 bus_no;
-			u32 dev_no;	/* bus-relative (0..n-1) device # */
+			/* Bus-relative (0..n-1) device # */
+			u32 dev_no;
 		} __packed reconfigure_device;
-			/* for CONTROLVM_DEVICE_RECONFIGURE */
+		/* For CONTROLVM_BUS_CHANGESTATE */
 		struct  {
 			u32 bus_no;
 			struct visor_segment_state state;
-			u8 reserved[2];	/* Natural alignment purposes */
-		} __packed bus_change_state; /* for CONTROLVM_BUS_CHANGESTATE */
+			/* Natural alignment purposes */
+			u8 reserved[2];
+		} __packed bus_change_state;
+		/* For CONTROLVM_DEVICE_CHANGESTATE */
 		struct  {
 			u32 bus_no;
 			u32 dev_no;
@@ -307,37 +346,44 @@ struct controlvm_message_packet  {
 			struct  {
 				/* =1 if message is for a physical device */
 				u32 phys_device:1;
-				u32 reserved:31;	/* Natural alignment */
-				u32 reserved1;		/* Natural alignment */
+				/* Natural alignment */
+				u32 reserved:31;
+				/* Natural alignment */
+				u32 reserved1;
 			} __packed flags;
-			u8 reserved[2];	/* Natural alignment purposes */
+			/* Natural alignment purposes */
+			u8 reserved[2];
 		} __packed device_change_state;
-			/* for CONTROLVM_DEVICE_CHANGESTATE */
+		/* For CONTROLVM_DEVICE_CHANGESTATE_EVENT */
 		struct  {
 			u32 bus_no;
 			u32 dev_no;
 			struct visor_segment_state state;
-			u8 reserved[6];	/* Natural alignment purposes */
+			/* Natural alignment purposes */
+			u8 reserved[6];
 		} __packed device_change_state_event;
-			/* for CONTROLVM_DEVICE_CHANGESTATE_EVENT */
+		/* For CONTROLVM_CHIPSET_INIT */
 		struct  {
-			/* indicates the max number of busses */
+			/* Indicates the max number of busses */
 			u32 bus_count;
-			/* indicates the max number of switches */
+			/* Indicates the max number of switches */
 			u32 switch_count;
 			enum visor_chipset_feature features;
-			u32 platform_number;	/* Platform Number */
-		} __packed init_chipset;	/* for CONTROLVM_CHIPSET_INIT */
+			/* Platform Number */
+			u32 platform_number;
+		} __packed init_chipset;
+		/* For CONTROLVM_CHIPSET_SELFTEST */
 		struct  {
-			u32 options;	/* reserved */
-			u32 test;	/* bit 0 set to run embedded selftest */
+			/* Reserved */
+			u32 options;
+			/* Bit 0 set to run embedded selftest */
+			u32 test;
 		} __packed chipset_selftest;
-			/* for CONTROLVM_CHIPSET_SELFTEST */
-		/* a physical address of something, that can be dereferenced
+		/* A physical address of something, that can be dereferenced
 		 * by the receiver of this ControlVm command
 		 */
 		u64 addr;
-		/* a handle of something (depends on command id) */
+		/* A handle of something (depends on command id) */
 		u64 handle;
 	};
 } __packed;
@@ -350,38 +396,51 @@ struct controlvm_message {
 
 struct visor_controlvm_channel {
 	struct channel_header header;
-	u64 gp_controlvm;	/* guest phys addr of this channel */
-	u64 gp_partition_tables;/* guest phys addr of partition tables */
-	u64 gp_diag_guest;	/* guest phys addr of diagnostic channel */
-	u64 gp_boot_romdisk;/* guest phys addr of (read* only) Boot ROM disk */
-	u64 gp_boot_ramdisk;/* guest phys addr of writable Boot RAM disk */
-	u64 gp_acpi_table;	/* guest phys addr of acpi table */
-	u64 gp_control_channel;/* guest phys addr of control channel */
-	u64 gp_diag_romdisk;/* guest phys addr of diagnostic ROM disk */
-	u64 gp_nvram;	/* guest phys addr of NVRAM channel */
-	u64 request_payload_offset;	/* Offset to request payload area */
-	u64 event_payload_offset;	/* Offset to event payload area */
+	/* Guest phys addr of this channel */
+	u64 gp_controlvm;
+	/* Guest phys addr of partition tables */
+	u64 gp_partition_tables;
+	/* Guest phys addr of diagnostic channel */
+	u64 gp_diag_guest;
+	/* Guest phys addr of (read* only) Boot ROM disk */
+	u64 gp_boot_romdisk;
+	/* Guest phys addr of writable Boot RAM disk */
+	u64 gp_boot_ramdisk;
+	/* Guest phys addr of acpi table */
+	u64 gp_acpi_table;
+	/* Guest phys addr of control channel */
+	u64 gp_control_channel;
+	/* Guest phys addr of diagnostic ROM disk */
+	u64 gp_diag_romdisk;
+	/* Guest phys addr of NVRAM channel */
+	u64 gp_nvram;
+	/* Offset to request payload area */
+	u64 request_payload_offset;
+	/* Offset to event payload area */
+	u64 event_payload_offset;
 	/* Bytes available in request payload area */
 	u32 request_payload_bytes;
-	u32 event_payload_bytes;/* Bytes available in event payload area */
+	/* Bytes available in event payload area */
+	u32 event_payload_bytes;
 	u32 control_channel_bytes;
-	u32 nvram_channel_bytes;	/* Bytes in PartitionNvram segment */
-	u32 message_bytes;		/* sizeof(CONTROLVM_MESSAGE) */
-	u32 message_count;		/* CONTROLVM_MESSAGE_MAX */
-	u64 gp_smbios_table;		/* guest phys addr of SMBIOS tables */
-	u64 gp_physical_smbios_table;	/* guest phys addr of SMBIOS table  */
+	/* Bytes in PartitionNvram segment */
+	u32 nvram_channel_bytes;
+	/* sizeof(CONTROLVM_MESSAGE) */
+	u32 message_bytes;
+	/* CONTROLVM_MESSAGE_MAX */
+	u32 message_count;
+	/* Guest phys addr of SMBIOS tables */
+	u64 gp_smbios_table;
+	/* Guest phys addr of SMBIOS table  */
+	u64 gp_physical_smbios_table;
 	/* VISOR_MAX_GUESTS_PER_SERVICE */
 	char gp_reserved[2688];
-
-	/* guest physical address of EFI firmware image base  */
+	/* Guest physical address of EFI firmware image base  */
 	u64 virtual_guest_firmware_image_base;
-
-	/* guest physical address of EFI firmware entry point  */
+	/* Guest physical address of EFI firmware entry point  */
 	u64 virtual_guest_firmware_entry_point;
-
-	/* guest EFI firmware image size  */
+	/* Guest EFI firmware image size  */
 	u64 virtual_guest_firmware_image_size;
-
 	/* GPA = 1MB where EFI firmware image is copied to  */
 	u64 virtual_guest_firmware_boot_base;
 	u64 virtual_guest_image_base;
@@ -393,22 +452,25 @@ struct visor_controlvm_channel {
 	/* For Windows guests it shows if the visordisk is in dump mode */
 	u16 dump_action;
 	u16 nvram_fail_count;
-	u16 saved_crash_message_count;	/* = CONTROLVM_CRASHMSG_MAX */
+	/* = CONTROLVM_CRASHMSG_MAX */
+	u16 saved_crash_message_count;
 	/* Offset to request payload area needed for crash dump */
 	u32 saved_crash_message_offset;
 	/* Type of error encountered during installation */
 	u32 installation_error;
-	u32 installation_text_id;	/* Id of string to display */
+	/* Id of string to display */
+	u32 installation_text_id;
 	/* Number of remaining installation  steps (for progress bars) */
 	u16 installation_remaining_steps;
 	/* VISOR_TOOL_ACTIONS Installation Action field */
 	u8 tool_action;
-	u8 reserved;		/* alignment */
+	/* Alignment */
+	u8 reserved;
 	struct efi_visor_indication efi_visor_ind;
 	u32 sp_reserved;
 	/* Force signals to begin on 128-byte cache line */
 	u8 reserved2[28];
-	/* guest partition uses this queue to send requests to Control */
+	/* Guest partition uses this queue to send requests to Control */
 	struct signal_queue_header request_queue;
 	/* Control uses this queue to respond to service or guest
 	 * partition requests
@@ -418,20 +480,16 @@ struct visor_controlvm_channel {
 	struct signal_queue_header event_queue;
 	/* Service or guest partition  uses this queue to ack Control events */
 	struct signal_queue_header event_ack_queue;
-	 /* Request fixed-size message pool - does not include payload */
-	 struct controlvm_message request_msg[CONTROLVM_MESSAGE_MAX];
-
-	 /* Response fixed-size message pool - does not include payload */
-	 struct controlvm_message response_msg[CONTROLVM_MESSAGE_MAX];
-
-	 /* Event fixed-size message pool - does not include payload */
-	 struct controlvm_message event_msg[CONTROLVM_MESSAGE_MAX];
-
-	 /* Ack fixed-size message pool - does not include payload */
-	 struct controlvm_message event_ack_msg[CONTROLVM_MESSAGE_MAX];
-
-	 /* Message stored during IOVM creation to be reused after crash */
-	 struct controlvm_message saved_crash_msg[CONTROLVM_CRASHMSG_MAX];
+	/* Request fixed-size message pool - does not include payload */
+	struct controlvm_message request_msg[CONTROLVM_MESSAGE_MAX];
+	/* Response fixed-size message pool - does not include payload */
+	struct controlvm_message response_msg[CONTROLVM_MESSAGE_MAX];
+	/* Event fixed-size message pool - does not include payload */
+	struct controlvm_message event_msg[CONTROLVM_MESSAGE_MAX];
+	/* Ack fixed-size message pool - does not include payload */
+	struct controlvm_message event_ack_msg[CONTROLVM_MESSAGE_MAX];
+	/* Message stored during IOVM creation to be reused after crash */
+	struct controlvm_message saved_crash_msg[CONTROLVM_CRASHMSG_MAX];
 } __packed;
 
 /* The following header will be located at the beginning of PayloadVmOffset for
@@ -457,7 +515,8 @@ struct visor_controlvm_parameters_header {
 	u32 name_length;
 	uuid_le id;
 	u32 revision;
-	u32 reserved;		/* Natural alignment */
+	/* Natural alignment */
+	u32 reserved;
 } __packed;
 
 /* General Errors------------------------------------------------------[0-99] */
@@ -473,57 +532,50 @@ struct visor_controlvm_parameters_header {
 #define CONTROLVM_RESP_EXPECTED_CHIPSET_INIT	   101
 
 /* Maximum Limit----------------------------------------------------[200-299] */
-#define CONTROLVM_RESP_ERROR_MAX_BUSES		   201 /* BUS_CREATE */
-#define CONTROLVM_RESP_ERROR_MAX_DEVICES	   202 /* DEVICE_CREATE */
-/* Payload and Parameter Related------------------------------------[400-499] */
-#define CONTROLVM_RESP_PAYLOAD_INVALID		   400 /* SWITCH_ATTACHEXTPORT,
-							* DEVICE_CONFIGURE
-							*/
-#define CONTROLVM_RESP_INITIATOR_PARAMETER_INVALID 401 /* Multiple */
-#define CONTROLVM_RESP_TARGET_PARAMETER_INVALID	   402 /* DEVICE_CONFIGURE */
-#define CONTROLVM_RESP_CLIENT_PARAMETER_INVALID	   403 /* DEVICE_CONFIGURE */
-/* Specified[Packet Structure] Value-------------------------------[500-599] */
-#define CONTROLVM_RESP_BUS_INVALID		   500 /* SWITCH_ATTACHINTPORT,
-							* BUS_CONFIGURE,
-							* DEVICE_CREATE,
-							* DEVICE_CONFIG
-							* DEVICE_DESTROY
-							*/
-#define CONTROLVM_RESP_DEVICE_INVALID		   501 /* SWITCH_ATTACHINTPORT*/
-						       /* DEVICE_CREATE,
-							* DEVICE_CONFIGURE,
-							* DEVICE_DESTROY
-							*/
-#define CONTROLVM_RESP_CHANNEL_INVALID		   502 /* DEVICE_CREATE,
-							* DEVICE_CONFIGURE
-							*/
-/* Partition Driver Callback Interface----------------------[600-699] */
-#define CONTROLVM_RESP_VIRTPCI_DRIVER_FAILURE	   604 /* BUS_CREATE,
-							* BUS_DESTROY,
-							* DEVICE_CREATE,
-							* DEVICE_DESTROY
-							*/
-/* Unable to invoke VIRTPCI callback */
-#define CONTROLVM_RESP_VIRTPCI_DRIVER_CALLBACK_ERROR   605 /* BUS_CREATE,
-							    * BUS_DESTROY,
-							    * DEVICE_CREATE,
-							    * DEVICE_DESTROY
-							    */
-/* VIRTPCI Callback returned error */
-#define CONTROLVM_RESP_GENERIC_DRIVER_CALLBACK_ERROR   606
-						       /* SWITCH_ATTACHEXTPORT,
-							* SWITCH_DETACHEXTPORT
-							* DEVICE_CONFIGURE
-							*/
+/* BUS_CREATE */
+#define CONTROLVM_RESP_ERROR_MAX_BUSES		   201
+/* DEVICE_CREATE */
+#define CONTROLVM_RESP_ERROR_MAX_DEVICES	   202
 
+/* Payload and Parameter Related------------------------------------[400-499] */
+/* SWITCH_ATTACHEXTPORT, DEVICE_CONFIGURE */
+#define CONTROLVM_RESP_PAYLOAD_INVALID		   400
+/* Multiple */
+#define CONTROLVM_RESP_INITIATOR_PARAMETER_INVALID 401
+/* DEVICE_CONFIGURE */
+#define CONTROLVM_RESP_TARGET_PARAMETER_INVALID	   402
+/* DEVICE_CONFIGURE */
+#define CONTROLVM_RESP_CLIENT_PARAMETER_INVALID	   403
+
+/* Specified[Packet Structure] Value--------------------------------[500-599] */
+/* SWITCH_ATTACHINTPORT */
+/* BUS_CONFIGURE, DEVICE_CREATE, DEVICE_CONFIG, DEVICE_DESTROY */
+#define CONTROLVM_RESP_BUS_INVALID		   500
+/* SWITCH_ATTACHINTPORT*/
+/* DEVICE_CREATE, DEVICE_CONFIGURE, DEVICE_DESTROY */
+#define CONTROLVM_RESP_DEVICE_INVALID		   501
+/* DEVICE_CREATE, DEVICE_CONFIGURE */
+#define CONTROLVM_RESP_CHANNEL_INVALID		   502
+/* Partition Driver Callback Interface------------------------------[600-699] */
+/* BUS_CREATE, BUS_DESTROY, DEVICE_CREATE, DEVICE_DESTROY */
+#define CONTROLVM_RESP_VIRTPCI_DRIVER_FAILURE	   604
+/* Unable to invoke VIRTPCI callback. VIRTPCI Callback returned error */
+/* BUS_CREATE, BUS_DESTROY, DEVICE_CREATE, DEVICE_DESTROY */
+#define CONTROLVM_RESP_VIRTPCI_DRIVER_CALLBACK_ERROR   605
 /* generic device callback returned error */
+/* SWITCH_ATTACHEXTPORT, SWITCH_DETACHEXTPORT, DEVICE_CONFIGURE */
+#define CONTROLVM_RESP_GENERIC_DRIVER_CALLBACK_ERROR   606
+
 /* Bus Related------------------------------------------------------[700-799] */
-#define CONTROLVM_RESP_ERROR_BUS_DEVICE_ATTACHED       700 /* BUS_DESTROY */
+/* BUS_DESTROY */
+#define CONTROLVM_RESP_ERROR_BUS_DEVICE_ATTACHED       700
+
 /* Channel Related--------------------------------------------------[800-899] */
-#define CONTROLVM_RESP_CHANNEL_TYPE_UNKNOWN	       800 /* GET_CHANNELINFO,
-							    * DEVICE_DESTROY
-							    */
-#define CONTROLVM_RESP_CHANNEL_SIZE_TOO_SMALL	       801 /* DEVICE_CREATE */
+/* GET_CHANNELINFO, DEVICE_DESTROY */
+#define CONTROLVM_RESP_CHANNEL_TYPE_UNKNOWN	       800
+/* DEVICE_CREATE */
+#define CONTROLVM_RESP_CHANNEL_SIZE_TOO_SMALL	       801
+
 /* Chipset Shutdown Related---------------------------------------[1000-1099] */
 #define CONTROLVM_RESP_CHIPSET_SHUTDOWN_FAILED	       1000
 #define CONTROLVM_RESP_CHIPSET_SHUTDOWN_ALREADY_ACTIVE 1001
@@ -534,5 +586,5 @@ struct visor_controlvm_parameters_header {
 
 /* Device Related-------------------------------------------------[1400-1499] */
 #define CONTROLVM_RESP_DEVICE_UDEV_TIMEOUT	       1400
-
-#endif				/* __CONTROLVMCHANNEL_H__ */
+/* __CONTROLVMCHANNEL_H__ */
+#endif
