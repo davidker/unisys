@@ -41,11 +41,13 @@ struct visorchannel {
 	bool requested;
 	struct channel_header chan_hdr;
 	uuid_le guid;
-	bool needs_lock;	/* channel creator knows if more than one */
-				/* thread will be inserting or removing */
-	spinlock_t insert_lock; /* protect head writes in chan_hdr */
-	spinlock_t remove_lock;	/* protect tail writes in chan_hdr */
-
+	/* channel creator knows if more than one */
+	bool needs_lock;
+	/* thread will be inserting or removing */
+	/* protect head writes in chan_hdr */
+	spinlock_t insert_lock;
+	/* protect tail writes in chan_hdr */
+	spinlock_t remove_lock;
 	uuid_le type;
 	uuid_le inst;
 };
@@ -246,9 +248,9 @@ signalremove_inner(struct visorchannel *channel, u32 queue, void *msg)
 
 	/*
 	 * For each data field in SIGNAL_QUEUE_HEADER that was modified,
-	 * update host memory.
+	 * update host memory. Required for channel sync.
 	 */
-	mb(); /* required for channel synch */
+	mb();
 
 	error = SIG_WRITE_FIELD(channel, queue, &sig_hdr, tail);
 	if (error)
@@ -351,9 +353,9 @@ signalinsert_inner(struct visorchannel *channel, u32 queue, void *msg)
 
 	/*
 	 * For each data field in SIGNAL_QUEUE_HEADER that was modified,
-	 * update host memory.
+	 * update host memory. Required for channel sync.
 	 */
-	mb(); /* required for channel synch */
+	mb();
 
 	err = SIG_WRITE_FIELD(channel, queue, &sig_hdr, head);
 	if (err)
