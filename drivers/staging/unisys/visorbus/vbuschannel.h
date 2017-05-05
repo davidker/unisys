@@ -33,7 +33,7 @@
 static const uuid_le visor_vbus_channel_protocol_uuid =
 	VISOR_VBUS_CHANNEL_PROTOCOL_UUID;
 
-#define VISOR_VBUS_CHANNEL_PROTOCOL_SIGNATURE ULTRA_CHANNEL_PROTOCOL_SIGNATURE
+#define VISOR_VBUS_CHANNEL_PROTOCOL_SIGNATURE VISOR_CHANNEL_PROTOCOL_SIGNATURE
 
 /* Must increment this whenever you insert or delete fields within this channel
  * struct.  Also increment whenever you change the meaning of fields within this

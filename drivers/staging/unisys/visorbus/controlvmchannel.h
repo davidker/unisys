@@ -24,7 +24,7 @@
 		0xb9, 0x66, 0x34, 0x48, 0xb7, 0x38, 0x6b, 0x3d)
 
 #define VISOR_CONTROLVM_CHANNEL_PROTOCOL_SIGNATURE \
-	ULTRA_CHANNEL_PROTOCOL_SIGNATURE
+	VISOR_CHANNEL_PROTOCOL_SIGNATURE
 #define CONTROLVM_MESSAGE_MAX 64
 
 /* Must increment this whenever you insert or delete fields within
