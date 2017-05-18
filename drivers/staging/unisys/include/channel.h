@@ -51,7 +51,7 @@ enum channel_serverstate {
  *
  * @CHANNELCLI_DETACHED:
  * @CHANNELCLI_DISABLED:  Client can see channel but is NOT allowed to use it
- *                        unless given TBD* explicit request
+ *                        unless given TBD explicit request
  *                        (should actually be < DETACHED).
  * @CHANNELCLI_ATTACHING: Legacy EFI client request for EFI server to attach.
  * @CHANNELCLI_ATTACHED:  Idle, but client may want to use channel any time.
@@ -269,10 +269,7 @@ visor_check_channel(struct channel_header *ch,
 	return 1;
 }
 
-/*
- * CHANNEL Guids
- */
-
+/* CHANNEL Guids */
 /* {414815ed-c58c-11da-95a9-00e08161165f} */
 #define VISOR_VHBA_CHANNEL_UUID \
 	UUID_LE(0x414815ed, 0xc58c, 0x11da, \
@@ -280,7 +277,6 @@ visor_check_channel(struct channel_header *ch,
 static const uuid_le visor_vhba_channel_uuid = VISOR_VHBA_CHANNEL_UUID;
 #define VISOR_VHBA_CHANNEL_UUID_STR \
 	"414815ed-c58c-11da-95a9-00e08161165f"
-
 /* {8cd5994d-c58e-11da-95a9-00e08161165f} */
 #define VISOR_VNIC_CHANNEL_UUID \
 	UUID_LE(0x8cd5994d, 0xc58e, 0x11da, \
@@ -288,7 +284,6 @@ static const uuid_le visor_vhba_channel_uuid = VISOR_VHBA_CHANNEL_UUID;
 static const uuid_le visor_vnic_channel_uuid = VISOR_VNIC_CHANNEL_UUID;
 #define VISOR_VNIC_CHANNEL_UUID_STR \
 	"8cd5994d-c58e-11da-95a9-00e08161165f"
-
 /* {72120008-4AAB-11DC-8530-444553544200} */
 #define VISOR_SIOVM_UUID \
 	UUID_LE(0x72120008, 0x4AAB, 0x11DC, \
