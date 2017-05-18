@@ -7,9 +7,7 @@
  * Everything needed for IOPart-GuestPart communication is define in
  * this file. Note: Everything is OS-independent because this file is
  * used by Windows, Linux and possible EFI drivers.
- */
-
-/*
+ *
  * Communication flow between the IOPart and GuestPart uses the channel headers
  * channel state. The following states are currently being used:
  *       UNINIT(All Zeroes), CHANNEL_ATTACHING, CHANNEL_ATTACHED, CHANNEL_OPENED
@@ -30,7 +28,6 @@
  */
 
 #include <linux/uuid.h>
-
 #include <linux/dma-direction.h>
 #include "channel.h"
 
@@ -78,9 +75,7 @@
 
 /* Size of cdb - i.e., SCSI cmnd */
 #define MAX_CMND_SIZE 16
-
 #define MAX_SENSE_SIZE 64
-
 #define MAX_PHYS_INFO 64
 
 /* Various types of network packets that can be sent in cmdrsp. */
@@ -199,6 +194,7 @@ struct uiscmdrsp_scsi {
 	int linuxstat;		/* original Linux status used by Linux vdisk */
 	u8 scsistat;		/* the scsi status */
 	u8 addlstat;		/* non-scsi status */
+
 #define ADDL_SEL_TIMEOUT 4
 
 	/* The following fields are need to determine the result of command. */
@@ -220,9 +216,7 @@ struct uiscmdrsp_scsi {
 /*
  * Defines to support sending correct inquiry result when no disk is
  * configured.
- */
-
-/*
+ *
  * From SCSI SPC2 -
  *
  * If the target is not capable of supporting a device on this logical unit, the
@@ -259,7 +253,8 @@ struct uiscmdrsp_scsi {
  */
 #define NO_DISK_INQUIRY_RESULT_LEN 36
 
-#define MIN_INQUIRY_RESULT_LEN 5 /* 5 bytes minimum for inquiry result */
+/* 5 bytes minimum for inquiry result */
+#define MIN_INQUIRY_RESULT_LEN 5
 
 /* SCSI device version for no disk inquiry result */
 #define SCSI_SPC2_VER 4	/* indicates SCSI SPC2 (SPC3 is 5) */
@@ -509,7 +504,7 @@ struct uiscmdrsp {
 	};
 	/* Send the response when the cmd is done (scsi and scsittaskmgmt). */
 	void *private_data;
-	struct uiscmdrsp *next;	/* General Purpose Queue Link */
+	struct uiscmdrsp *next;		/* General Purpose Queue Link */
 	struct uiscmdrsp *activeQ_next;	/* Pointer to the nextactive commands */
 	struct uiscmdrsp *activeQ_prev;	/* Pointer to the prevactive commands */
 } __packed;
@@ -524,6 +519,7 @@ struct iochannel_vnic {
 	u32 mtu;			/* 4 bytes */
 	uuid_le zone_uuid;		/* 16 bytes */
 } __packed;
+
 /*
  * This is just the header of the IO channel. It is assumed that directly after
  * this header there is a large region of memory which contains the command and
