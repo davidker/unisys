@@ -168,7 +168,7 @@ struct vhba_wwnn {
 } __packed;
 
 /*
- * WARNING: Values stired in this structure must contain maximum counts (not
+ * WARNING: Values stored in this structure must contain maximum counts (not
  * maximum values).
  */
 struct vhba_config_max {/* 20 bytes */
