@@ -52,11 +52,11 @@ enum channel_clientstate {
 	CHANNELCLI_ATTACHED = 3,	/* idle, but client may want
 					 * to use channel any time
 					 */
-	CHANNELCLI_BUSY = 4,	/* client either wants to use or is
-				 * using channel
-				 */
-	CHANNELCLI_OWNED = 5	/* "no worries" state - client can */
-				/* access channel anytime */
+	CHANNELCLI_BUSY = 4,		/* client either wants to use or is
+					 * using channel
+					 */
+	CHANNELCLI_OWNED = 5		/* "no worries" state - client can */
+					/* access channel anytime */
 };
 
 /* Values for VISORA_CHANNEL_PROTOCOL.CliErrorBoot: */
@@ -64,12 +64,10 @@ enum channel_clientstate {
  * disabled
  */
 #define VISOR_CLIERRORBOOT_THROTTLEMSG_DISABLED 0x01
-
 /* throttling invalid boot channel statetransition error due to client
  * not attached
  */
 #define VISOR_CLIERRORBOOT_THROTTLEMSG_NOTATTACHED 0x02
-
 /* throttling invalid boot channel statetransition error due to busy channel */
 #define VISOR_CLIERRORBOOT_THROTTLEMSG_BUSY 0x04
 
@@ -228,10 +226,7 @@ visor_check_channel(struct channel_header *ch,
 	return 1;
 }
 
-/*
- * CHANNEL Guids
- */
-
+/* CHANNEL Guids */
 /* {414815ed-c58c-11da-95a9-00e08161165f} */
 #define VISOR_VHBA_CHANNEL_UUID \
 	UUID_LE(0x414815ed, 0xc58c, 0x11da, \
@@ -239,7 +234,6 @@ visor_check_channel(struct channel_header *ch,
 static const uuid_le visor_vhba_channel_uuid = VISOR_VHBA_CHANNEL_UUID;
 #define VISOR_VHBA_CHANNEL_UUID_STR \
 	"414815ed-c58c-11da-95a9-00e08161165f"
-
 /* {8cd5994d-c58e-11da-95a9-00e08161165f} */
 #define VISOR_VNIC_CHANNEL_UUID \
 	UUID_LE(0x8cd5994d, 0xc58e, 0x11da, \
@@ -247,7 +241,6 @@ static const uuid_le visor_vhba_channel_uuid = VISOR_VHBA_CHANNEL_UUID;
 static const uuid_le visor_vnic_channel_uuid = VISOR_VNIC_CHANNEL_UUID;
 #define VISOR_VNIC_CHANNEL_UUID_STR \
 	"8cd5994d-c58e-11da-95a9-00e08161165f"
-
 /* {72120008-4AAB-11DC-8530-444553544200} */
 #define VISOR_SIOVM_UUID \
 	UUID_LE(0x72120008, 0x4AAB, 0x11DC, \
