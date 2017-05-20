@@ -45,7 +45,6 @@ struct visorchannel {
 				/* thread will be inserting or removing */
 	spinlock_t insert_lock; /* protect head writes in chan_hdr */
 	spinlock_t remove_lock;	/* protect tail writes in chan_hdr */
-
 	uuid_le type;
 	uuid_le inst;
 };
