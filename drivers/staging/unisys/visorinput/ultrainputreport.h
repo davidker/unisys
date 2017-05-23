@@ -20,7 +20,7 @@
 /* These defines identify mouse and keyboard activity which is specified by the
  * firmware to the host using the cmsimpleinput protocol.  @ingroup coretypes
  */
-		/* only motion; arg1=x, arg2=y */
+	/* only motion; arg1=x, arg2=y */
 #define INPUTACTION_XY_MOTION 1
 /* arg1: 1=left,2=center,3=right */
 #define INPUTACTION_MOUSE_BUTTON_DOWN 2
