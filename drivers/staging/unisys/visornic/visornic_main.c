@@ -312,9 +312,7 @@ static const struct file_operations debugfs_enable_ints_fops = {
 static void
 visornic_serverdown_complete(struct visornic_devdata *devdata)
 {
-	struct net_device *netdev;
-
-	netdev = devdata->netdev;
+	struct net_device *netdev = devdata->netdev;
 
 	/* Stop polling for interrupts */
 	del_timer_sync(&devdata->irq_poll_timer);
@@ -393,13 +391,11 @@ err_unlock:
 static struct sk_buff *
 alloc_rcv_buf(struct net_device *netdev)
 {
-	struct sk_buff *skb;
-
 	/* NOTE: the first fragment in each rcv buffer is pointed to by
 	 * rcvskb->data. For now all rcv buffers will be RCVPOST_BUF_SIZE
 	 * in length, so the first frag is large enough to hold 1514.
 	 */
-	skb = alloc_skb(RCVPOST_BUF_SIZE, GFP_ATOMIC);
+	struct sk_buff *skb = alloc_skb(RCVPOST_BUF_SIZE, GFP_ATOMIC);
 	if (!skb)
 		return NULL;
 	skb->dev = netdev;
@@ -450,7 +446,6 @@ post_skb(struct uiscmdrsp *cmdrsp,
 
 	atomic_inc(&devdata->num_rcvbuf_in_iovm);
 	devdata->chstat.sent_post++;
-
 	return 0;
 }
 
@@ -492,7 +487,6 @@ send_enbdis(struct net_device *netdev, int state,
  *	are disabled, reclaim memory from rcv bufs.
  *	Returns 0 on success, negative for failure of IO Partition
  *	responding.
- *
  */
 static int
 visornic_disable_with_timeout(struct net_device *netdev, const int timeout)
@@ -711,7 +705,6 @@ visornic_enable_with_timeout(struct net_device *netdev, const int timeout)
 	}
 
 	netif_start_queue(netdev);
-
 	return 0;
 }
 
@@ -769,7 +762,6 @@ static int
 visornic_open(struct net_device *netdev)
 {
 	visornic_enable_with_timeout(netdev, VISORNIC_INFINITE_RSP_WAIT);
-
 	return 0;
 }
 
@@ -784,7 +776,6 @@ static int
 visornic_close(struct net_device *netdev)
 {
 	visornic_disable_with_timeout(netdev, VISORNIC_INFINITE_RSP_WAIT);
-
 	return 0;
 }
 
@@ -954,6 +945,7 @@ visornic_xmit(struct sk_buff *skb, struct net_device *netdev)
 	 * - everything else will be pass in frags & DMA'ed
 	 */
 	memcpy(cmdrsp->net.xmt.ethhdr, skb->data, ETH_HLEN);
+
 	/* copy frags info - from skb->data we need to only provide access
 	 * beyond eth header
 	 */
@@ -1017,7 +1009,6 @@ static struct net_device_stats *
 visornic_get_stats(struct net_device *netdev)
 {
 	struct visornic_devdata *devdata = netdev_priv(netdev);
-
 	return &devdata->net_stats;
 }
 
@@ -1333,9 +1324,7 @@ visornic_rx(struct uiscmdrsp *cmdrsp)
 	 * sets up skb->pkt_type & it also PULLS out the eth header
 	 */
 	skb->protocol = eth_type_trans(skb, netdev);
-
 	eth = eth_hdr(skb);
-
 	skb->csum = 0;
 	skb->ip_summed = CHECKSUM_NONE;
 
@@ -2184,7 +2173,6 @@ static int visornic_init(void)
 
 cleanup_debugfs:
 	debugfs_remove_recursive(visornic_debugfs_dir);
-
 	return err;
 }
 
@@ -2196,7 +2184,6 @@ cleanup_debugfs:
 static void visornic_cleanup(void)
 {
 	visorbus_unregister_visor_driver(&visornic_driver);
-
 	debugfs_remove_recursive(visornic_debugfs_dir);
 }
 
