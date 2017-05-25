@@ -410,13 +410,17 @@ chipset_init(struct controlvm_message *inmsg)
 {
 	static int chipset_inited;
 	enum visor_chipset_feature features = 0;
-	int rc = CONTROLVM_RESP_SUCCESS;
-	int res = 0;
+	int err = 0;
 
 	if (chipset_inited) {
-		rc = -CONTROLVM_RESP_ALREADY_DONE;
-		res = -EIO;
-		goto out_respond;
+		err = -EIO;
+		if (inmsg->hdr.flags.response_expected)
+			err = controlvm_respond_chipset_init
+						(&inmsg->hdr,
+						 -CONTROLVM_RESP_ALREADY_DONE,
+						 features);
+
+		return err;
 	}
 	chipset_inited = 1;
 
@@ -433,11 +437,11 @@ chipset_init(struct controlvm_message *inmsg)
 	 */
 	features |= VISOR_CHIPSET_FEATURE_REPLY;
 
-out_respond:
 	if (inmsg->hdr.flags.response_expected)
-		res = controlvm_respond_chipset_init(&inmsg->hdr, rc, features);
+		err = controlvm_respond_chipset_init
+			  (&inmsg->hdr, -CONTROLVM_RESP_SUCCESS, features);
 
-	return res;
+	return err;
 }
 
 static int
