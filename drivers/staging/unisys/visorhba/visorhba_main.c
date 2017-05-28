@@ -18,13 +18,13 @@
 #include <linux/kthread.h>
 #include <linux/idr.h>
 #include <linux/seq_file.h>
+#include <linux/visorbus/visorbus.h>
+#include <linux/visorbus/iochannel.h>
 #include <scsi/scsi.h>
 #include <scsi/scsi_host.h>
 #include <scsi/scsi_cmnd.h>
 #include <scsi/scsi_device.h>
 
-#include "visorbus.h"
-#include "iochannel.h"
 
 /* The Send and Receive Buffers of the IO Queue may both be full */
 

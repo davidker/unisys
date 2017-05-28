@@ -32,7 +32,7 @@
 #include <linux/uuid.h>
 
 #include <linux/dma-direction.h>
-#include "channel.h"
+#include <linux/visorbus/channel.h>
 
 #define VISOR_VHBA_CHANNEL_SIGNATURE VISOR_CHANNEL_SIGNATURE
 #define VISOR_VNIC_CHANNEL_SIGNATURE VISOR_CHANNEL_SIGNATURE

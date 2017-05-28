@@ -22,8 +22,8 @@
 #include <linux/netdevice.h>
 #include <linux/uuid.h>
 #include <linux/crash_dump.h>
+#include <linux/visorbus/visorbus.h>
 
-#include "visorbus.h"
 #include "visorbus_private.h"
 #include "vmcallinterface.h"
 

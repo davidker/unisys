@@ -16,8 +16,8 @@
 
 #include <linux/debugfs.h>
 #include <linux/uuid.h>
+#include <linux/visorbus/visorbus.h>
 
-#include "visorbus.h"
 #include "visorbus_private.h"
 
 #define MYDRVNAME "visorbus"
