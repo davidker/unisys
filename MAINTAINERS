@@ -13117,6 +13117,8 @@ L:	sparmaintainer@unisys.com (Unisys internal)
 S:	Supported
 F:	drivers/staging/unisys/
 F:	include/linux/visorbus/
+F:	Documentation/ABI/stable/sysfs-bus-visorbus
+F:	Documentation/visorbus.txt
 
 UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
 M:	Vinayak Holikatti <vinholikatti@gmail.com>
