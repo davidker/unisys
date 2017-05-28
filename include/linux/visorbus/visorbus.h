@@ -36,8 +36,7 @@
 #include <linux/uuid.h>
 #include <linux/seq_file.h>
 #include <linux/slab.h>
-
-#include "channel.h"
+#include <linux/visorbus/channel.h>
 
 struct visor_driver;
 struct visor_device;
