@@ -13119,6 +13119,7 @@ F:	drivers/staging/unisys/
 F:	include/linux/visorbus/
 F:	Documentation/ABI/stable/sysfs-bus-visorbus
 F:	Documentation/visorbus.txt
+F:	drivers/virt/visorbus
 
 UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
 M:	Vinayak Holikatti <vinholikatti@gmail.com>
