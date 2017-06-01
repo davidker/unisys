@@ -141,7 +141,17 @@ struct visornic_devdata {
 	struct uiscmdrsp cmdrsp[SIZEOF_CMDRSP];
 };
 
-/* Returns next non-zero index on success or 0 on failure (i.e. out of room). */
+/*
+ * add_physinfo_entries - 
+ * @inp_pfn: 
+ * @inp_off: 
+ * @inp_len:
+ * @index:
+ * @max_pi_arr_entries:
+ * @pi_arr: 
+ *
+ * Return: Next non-zero index on success, or 0 on failure (i.e. out of room).
+ */
 static u16
 add_physinfo_entries(u64 inp_pfn, u16 inp_off, u32 inp_len, u16 index,
 		     u16 max_pi_arr_entries, struct phys_info pi_arr[])
@@ -179,16 +189,15 @@ add_physinfo_entries(u64 inp_pfn, u16 inp_off, u32 inp_len, u16 index,
 }
 
 /*
- *	visor_copy_fragsinfo_from_skb(
- *	@skb_in: skbuff that we are pulling the frags from
- *	@firstfraglen: length of first fragment in skb
- *	@frags_max: max len of frags array
- *	@frags: frags array filled in on output
+ * visor_copy_fragsinfo_from_skb - Copy fragment list in the SKB to a phys_info
+ *				   array that IOPART understands
+ * @skb: 	  Skbuff that we are pulling the frags from
+ * @firstfraglen: Length of first fragment in skb
+ * @frags_max:	  Max len of frags array
+ * @frags:	  Frags array filled in on output
  *
- *	Copy the fragment list in the SKB to a phys_info
- *	array that the IOPART understands.
- *	Return value indicates number of entries filled in frags
- *	Negative values indicate an error.
+ * Return: Number of entries filled in frags on success, negative error value on
+ *	   error.
  */
 static int
 visor_copy_fragsinfo_from_skb(struct sk_buff *skb, unsigned int firstfraglen,
@@ -288,13 +297,12 @@ static const struct file_operations debugfs_enable_ints_fops = {
 };
 
 /*
- *	visornic_serverdown_complete - IOPART went down, pause device
- *	@work: Work queue it was scheduled on
+ * visornic_serverdown_complete - IOPART went down, pause device
+ * @devdata: Device that is being managed by IOPART
  *
- *	The IO partition has gone down and we need to do some cleanup
- *	for when it comes back. Treat the IO partition as the link
- *	being down.
- *	Returns void.
+ * The IO partition has gone down and we need to do some cleanup
+ * for when it comes back. Treat the IO partition as the link
+ * being down.
  */
 static void
 visornic_serverdown_complete(struct visornic_devdata *devdata)
@@ -321,12 +329,14 @@ visornic_serverdown_complete(struct visornic_devdata *devdata)
 }
 
 /*
- *	visornic_serverdown - Command has notified us that IOPART is down
- *	@devdata: device that is being managed by IOPART
+ * visornic_serverdown - Command has notified us that IOPART is down
+ * @devdata:	   Device that is being managed by IOPART
+ * @complete_func: Function to tell command we are done. 
  *
- *	Schedule the work needed to handle the server down request. Make
- *	sure we haven't already handled the server change state event.
- *	Returns 0 if we scheduled the work, -EINVAL on error.
+ * Schedule the work needed to handle the server down request. Make
+ * sure we haven't already handled the server change state event.
+ *
+ * Returns: 0 if we scheduled the work, -EINVAL on error
  */
 static int
 visornic_serverdown(struct visornic_devdata *devdata,
