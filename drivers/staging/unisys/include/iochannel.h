@@ -34,7 +34,6 @@
 #include <linux/dma-direction.h>
 #include "channel.h"
 
-#define VISOR_VHBA_CHANNEL_SIGNATURE VISOR_CHANNEL_SIGNATURE
 #define VISOR_VNIC_CHANNEL_SIGNATURE VISOR_CHANNEL_SIGNATURE
 #define VISOR_VSWITCH_CHANNEL_SIGNATURE VISOR_CHANNEL_SIGNATURE
 
@@ -53,7 +52,7 @@
 	(visor_check_channel(ch, visor_vhba_channel_uuid, \
 			     "vhba", MIN_IO_CHANNEL_SIZE, \
 			     VISOR_VHBA_CHANNEL_VERSIONID, \
-			     VISOR_VHBA_CHANNEL_SIGNATURE))
+			     VISOR_CHANNEL_SIGNATURE))
 
 #define VISOR_VNIC_CHANNEL_OK_CLIENT(ch) \
 	(visor_check_channel(ch, visor_vnic_channel_uuid, \
