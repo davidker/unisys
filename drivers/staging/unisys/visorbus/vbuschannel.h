@@ -47,7 +47,8 @@
 
 static const uuid_le visor_vbus_channel_uuid = VISOR_VBUS_CHANNEL_UUID;
 
-/* struct visor_vbus_deviceinfo
+/*
+ * struct visor_vbus_deviceinfo
  *
  * @devtype:  Short string identifying the device type.
  * @drvname:  Driver .sys file name.
