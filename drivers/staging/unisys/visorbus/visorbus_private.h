@@ -72,14 +72,6 @@ void *visorchannel_get_header(struct visorchannel *channel);
  *
  * @VMCALL_CONTROLVM_ADDR: Used by all guests, not just IO.
  *
- * Note: When a new VMCALL is added:
- * - The 1st 2 hex digits correspond to one of the VMCALL_MONITOR_INTERFACE
- *   types.
- * - The next 2 hex digits are the nth relative instance of within a type.
- * E.G. for VMCALL_VIRTPART_RECYCLE_PART,
- * - The 0x02 identifies it as a VMCALL_VIRTPART type.
- * - The 0x01 identifies it as the 1st instance of a VMCALL_VIRTPART type of
- *   VMCALL.
  */
 enum vmcall_monitor_interface_method_tuple {
 	VMCALL_CONTROLVM_ADDR = 0x0501,
@@ -94,8 +86,6 @@ enum vmcall_result {
 	VMCALL_RESULT_DEVICE_NOT_READY = 5
 };
 
-/* Structures for IO VMCALLs */
-/* Parameters to VMCALL_CONTROLVM_ADDR interface */
 /*
  * struct vmcall_io_controlvm_addr_params - Structure for IO VMCALLS. Has
  *                                          parameters to VMCALL_CONTROLVM_ADDR
