@@ -52,8 +52,7 @@ struct visorchannel {
 	uuid_le inst;
 };
 
-void
-visorchannel_destroy(struct visorchannel *channel)
+void visorchannel_destroy(struct visorchannel *channel)
 {
 	if (!channel)
 		return;
@@ -65,45 +64,38 @@ visorchannel_destroy(struct visorchannel *channel)
 	kfree(channel);
 }
 
-u64
-visorchannel_get_physaddr(struct visorchannel *channel)
+u64 visorchannel_get_physaddr(struct visorchannel *channel)
 {
 	return channel->physaddr;
 }
 
-ulong
-visorchannel_get_nbytes(struct visorchannel *channel)
+ulong visorchannel_get_nbytes(struct visorchannel *channel)
 {
 	return channel->nbytes;
 }
 
-char *
-visorchannel_uuid_id(uuid_le *guid, char *s)
+char * visorchannel_uuid_id(uuid_le *guid, char *s)
 {
 	sprintf(s, "%pUL", guid);
 	return s;
 }
 
-char *
-visorchannel_id(struct visorchannel *channel, char *s)
+char * visorchannel_id(struct visorchannel *channel, char *s)
 {
 	return visorchannel_uuid_id(&channel->guid, s);
 }
 
-char *
-visorchannel_zoneid(struct visorchannel *channel, char *s)
+char * visorchannel_zoneid(struct visorchannel *channel, char *s)
 {
 	return visorchannel_uuid_id(&channel->chan_hdr.zone_uuid, s);
 }
 
-u64
-visorchannel_get_clientpartition(struct visorchannel *channel)
+u64 visorchannel_get_clientpartition(struct visorchannel *channel)
 {
 	return channel->chan_hdr.partition_handle;
 }
 
-int
-visorchannel_set_clientpartition(struct visorchannel *channel,
+int visorchannel_set_clientpartition(struct visorchannel *channel,
 				 u64 partition_handle)
 {
 	channel->chan_hdr.partition_handle = partition_handle;
@@ -116,16 +108,14 @@ visorchannel_set_clientpartition(struct visorchannel *channel,
  *
  * Return: the UUID of the provided channel
  */
-uuid_le
-visorchannel_get_uuid(struct visorchannel *channel)
+uuid_le visorchannel_get_uuid(struct visorchannel *channel)
 {
 	return channel->guid;
 }
 EXPORT_SYMBOL_GPL(visorchannel_get_uuid);
 
-int
-visorchannel_read(struct visorchannel *channel, ulong offset,
-		  void *dest, ulong nbytes)
+int visorchannel_read(struct visorchannel *channel, ulong offset,
+		      void *dest, ulong nbytes)
 {
 	if (offset + nbytes > channel->nbytes)
 		return -EIO;
@@ -135,9 +125,8 @@ visorchannel_read(struct visorchannel *channel, ulong offset,
 	return 0;
 }
 
-int
-visorchannel_write(struct visorchannel *channel, ulong offset,
-		   void *dest, ulong nbytes)
+int visorchannel_write(struct visorchannel *channel, ulong offset,
+		       void *dest, ulong nbytes)
 {
 	size_t chdr_size = sizeof(struct channel_header);
 	size_t copy_size;
@@ -156,8 +145,7 @@ visorchannel_write(struct visorchannel *channel, ulong offset,
 	return 0;
 }
 
-void *
-visorchannel_get_header(struct visorchannel *channel)
+void * visorchannel_get_header(struct visorchannel *channel)
 {
 	return &channel->chan_hdr;
 }
@@ -189,9 +177,8 @@ visorchannel_get_header(struct visorchannel *channel)
 			   &((sig_hdr)->FIELD), \
 			   sizeof((sig_hdr)->FIELD))
 
-static int
-sig_read_header(struct visorchannel *channel, u32 queue,
-		struct signal_queue_header *sig_hdr)
+static int sig_read_header(struct visorchannel *channel, u32 queue,
+			   struct signal_queue_header *sig_hdr)
 {
 	if (channel->chan_hdr.ch_space_offset < sizeof(struct channel_header))
 		return -EINVAL;
@@ -202,9 +189,9 @@ sig_read_header(struct visorchannel *channel, u32 queue,
 				 sig_hdr, sizeof(struct signal_queue_header));
 }
 
-static int
-sig_read_data(struct visorchannel *channel, u32 queue,
-	      struct signal_queue_header *sig_hdr, u32 slot, void *data)
+static int sig_read_data(struct visorchannel *channel, u32 queue,
+			 struct signal_queue_header *sig_hdr, 
+			 u32 slot, void *data)
 {
 	int signal_data_offset = SIG_DATA_OFFSET(&channel->chan_hdr, queue,
 						 sig_hdr, slot);
@@ -213,9 +200,9 @@ sig_read_data(struct visorchannel *channel, u32 queue,
 				 data, sig_hdr->signal_size);
 }
 
-static int
-sig_write_data(struct visorchannel *channel, u32 queue,
-	       struct signal_queue_header *sig_hdr, u32 slot, void *data)
+static int sig_write_data(struct visorchannel *channel, u32 queue,
+			  struct signal_queue_header *sig_hdr, 
+			  u32 slot, void *data)
 {
 	int signal_data_offset = SIG_DATA_OFFSET(&channel->chan_hdr, queue,
 						 sig_hdr, slot);
@@ -224,8 +211,8 @@ sig_write_data(struct visorchannel *channel, u32 queue,
 				  data, sig_hdr->signal_size);
 }
 
-static int
-signalremove_inner(struct visorchannel *channel, u32 queue, void *msg)
+static int signalremove_inner(struct visorchannel *channel, 
+			      u32 queue, void *msg)
 {
 	struct signal_queue_header sig_hdr;
 	int error;
@@ -271,8 +258,8 @@ signalremove_inner(struct visorchannel *channel, u32 queue, void *msg)
  *
  * Return: integer error code indicating the status of the removal
  */
-int
-visorchannel_signalremove(struct visorchannel *channel, u32 queue, void *msg)
+int visorchannel_signalremove(struct visorchannel *channel, 
+			      u32 queue, void *msg)
 {
 	int rc;
 	unsigned long flags;
@@ -289,8 +276,7 @@ visorchannel_signalremove(struct visorchannel *channel, u32 queue, void *msg)
 }
 EXPORT_SYMBOL_GPL(visorchannel_signalremove);
 
-static bool
-queue_empty(struct visorchannel *channel, u32 queue)
+static bool queue_empty(struct visorchannel *channel, u32 queue)
 {
 	struct signal_queue_header sig_hdr;
 
@@ -309,8 +295,7 @@ queue_empty(struct visorchannel *channel, u32 queue)
  * Return: boolean indicating whether any messages in the designated
  *         channel/queue are present
  */
-bool
-visorchannel_signalempty(struct visorchannel *channel, u32 queue)
+bool visorchannel_signalempty(struct visorchannel *channel, u32 queue)
 {
 	bool rc;
 	unsigned long flags;
@@ -326,8 +311,8 @@ visorchannel_signalempty(struct visorchannel *channel, u32 queue)
 }
 EXPORT_SYMBOL_GPL(visorchannel_signalempty);
 
-static int
-signalinsert_inner(struct visorchannel *channel, u32 queue, void *msg)
+static int signalinsert_inner(struct visorchannel *channel, u32 queue, 
+			      void *msg)
 {
 	struct signal_queue_header sig_hdr;
 	int err;
@@ -390,9 +375,10 @@ signalinsert_inner(struct visorchannel *channel, u32 queue, void *msg)
  * Return: pointer to visorchannel that was created if successful,
  *         otherwise NULL
  */
-static struct visorchannel *
-visorchannel_create_guts(u64 physaddr, unsigned long channel_bytes,
-			 gfp_t gfp, uuid_le guid, bool needs_lock)
+static struct visorchannel * visorchannel_create_guts(u64 physaddr, 
+						unsigned long channel_bytes,
+						gfp_t gfp, uuid_le guid,
+						bool needs_lock)
 {
 	struct visorchannel *channel;
 	int err;
@@ -467,17 +453,17 @@ err_destroy_channel:
 	return NULL;
 }
 
-struct visorchannel *
-visorchannel_create(u64 physaddr, unsigned long channel_bytes,
-		    gfp_t gfp, uuid_le guid)
+struct visorchannel * visorchannel_create(u64 physaddr, 
+					  unsigned long channel_bytes,
+					  gfp_t gfp, uuid_le guid)
 {
 	return visorchannel_create_guts(physaddr, channel_bytes, gfp, guid,
 					false);
 }
 
-struct visorchannel *
-visorchannel_create_with_lock(u64 physaddr, unsigned long channel_bytes,
-			      gfp_t gfp, uuid_le guid)
+struct visorchannel * visorchannel_create_with_lock(u64 physaddr, 
+						    unsigned long channel_bytes,
+						    gfp_t gfp, uuid_le guid)
 {
 	return visorchannel_create_guts(physaddr, channel_bytes, gfp, guid,
 					true);
@@ -492,8 +478,8 @@ visorchannel_create_with_lock(u64 physaddr, unsigned long channel_bytes,
  *
  * Return: integer error code indicating the status of the insertion
  */
-int
-visorchannel_signalinsert(struct visorchannel *channel, u32 queue, void *msg)
+int visorchannel_signalinsert(struct visorchannel *channel, 
+			      u32 queue, void *msg)
 {
 	int rc;
 	unsigned long flags;
