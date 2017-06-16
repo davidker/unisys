@@ -1,4 +1,5 @@
-/* visorchipset_main.c
+/*
+ * visorchipset_main.c
  *
  * Copyright (C) 2010 - 2015 UNISYS CORPORATION
  * All rights reserved.
