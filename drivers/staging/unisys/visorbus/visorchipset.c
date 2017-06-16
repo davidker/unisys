@@ -1338,6 +1338,7 @@ error: /* Need to convert from VMCALL error codes to Linux */
 		return -EFAULT;
 	}
 }
+
 static unsigned int
 issue_vmcall_io_controlvm_addr(u64 *control_addr, u32 *control_bytes)
 {
