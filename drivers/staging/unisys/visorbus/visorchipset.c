@@ -25,7 +25,6 @@
 
 #include "visorbus.h"
 #include "visorbus_private.h"
-#include "vmcallinterface.h"
 
 #define CURRENT_FILE_PC VISOR_BUS_PC_visorchipset_c
 
