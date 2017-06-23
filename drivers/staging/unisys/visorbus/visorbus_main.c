@@ -193,6 +193,8 @@ static void visorbus_release_busdevice(struct device *xdev)
 
 	debugfs_remove(dev->debugfs_client_bus_info);
 	debugfs_remove_recursive(dev->debugfs_dir);
+	kfree(dev->vbus_hdr_info);
+	visorchannel_destroy(dev->visorchannel);
 	kfree(dev);
 }
 
@@ -449,9 +451,6 @@ static int client_bus_info_debugfs_show(struct seq_file *seq, void *v)
 	struct visor_vbus_deviceinfo dev_info;
 	struct visor_device *vdev = seq->private;
 	struct visorchannel *channel = vdev->visorchannel;
-
-	if (!channel)
-		return 0;
 
 	seq_printf(seq,
 		   "Client device / client driver info for %s partition (vbus #%u):\n",
@@ -1086,6 +1085,10 @@ err_debugfs_dir:
  */
 static void visorbus_remove_instance(struct visor_device *dev)
 {
+	kfree(dev->vbus_hdr_info);
+	list_del(&dev->list_all);
+	device_unregister(&dev->device);
+
 	/*
 	 * Note that this will result in the release method for
 	 * dev->dev being called, which will call
@@ -1094,8 +1097,6 @@ static void visorbus_remove_instance(struct visor_device *dev)
 	 * successfully been able to trace thru the code to see where/how
 	 * release() gets called.  But I know it does.
 	 */
-	visorchannel_destroy(dev->visorchannel);
-	kfree(dev->vbus_hdr_info);
 	list_del(&dev->list_all);
 	device_unregister(&dev->device);
 }
