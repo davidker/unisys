@@ -1124,7 +1124,8 @@ int visorchipset_bus_create(struct visor_device *dev)
 	if (err < 0)
 		return err;
 
-	visorbus_create_response(dev, err);
+	visorbus_response(dev, err, CONTROLVM_BUS_CREATE);
+	dev->state.created = 1;
 
 	return 0;
 }
@@ -1132,7 +1133,7 @@ int visorchipset_bus_create(struct visor_device *dev)
 void visorchipset_bus_destroy(struct visor_device *dev)
 {
 	visorbus_remove_instance(dev);
-	visorbus_destroy_response(dev, 0);
+	visorbus_response(dev, 0, CONTROLVM_BUS_DESTROY);
 }
 
 int visorchipset_device_create(struct visor_device *dev_info)
@@ -1143,7 +1144,8 @@ int visorchipset_device_create(struct visor_device *dev_info)
 	if (err < 0)
 		return err;
 
-	visorbus_device_create_response(dev_info, err);
+	visorbus_response(dev_info, err, CONTROLVM_DEVICE_CREATE);
+	dev_info->state.created = 1;
 
 	return 0;
 }
@@ -1151,7 +1153,7 @@ int visorchipset_device_create(struct visor_device *dev_info)
 void visorchipset_device_destroy(struct visor_device *dev_info)
 {
 	remove_visor_device(dev_info);
-	visorbus_device_destroy_response(dev_info, 0);
+	visorbus_response(dev_info, 0, CONTROLVM_DEVICE_DESTROY);
 }
 
 /*
