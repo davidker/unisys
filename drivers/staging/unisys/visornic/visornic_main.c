@@ -423,13 +423,12 @@ err_unlock:
  */
 static struct sk_buff *alloc_rcv_buf(struct net_device *netdev)
 {
-	struct sk_buff *skb;
+	struct sk_buff *skb = alloc_skb(RCVPOST_BUF_SIZE, GFP_ATOMIC);
 
 	/* NOTE: the first fragment in each rcv buffer is pointed to by
 	 * rcvskb->data. For now all rcv buffers will be RCVPOST_BUF_SIZE
 	 * in length, so the first frag is large enough to hold 1514.
 	 */
-	skb = alloc_skb(RCVPOST_BUF_SIZE, GFP_ATOMIC);
 	if (!skb)
 		return NULL;
 	skb->dev = netdev;
