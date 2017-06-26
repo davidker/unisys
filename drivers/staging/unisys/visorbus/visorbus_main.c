@@ -1171,7 +1171,8 @@ static void pause_state_change_complete(struct visor_device *dev, int status)
 		return;
 
 	dev->pausing = false;
-	visorbus_device_pause_response(dev, status);
+	visorbus_device_changestate_response(dev, status,
+					     segment_state_standby);
 }
 
 /*
@@ -1195,7 +1196,8 @@ static void resume_state_change_complete(struct visor_device *dev, int status)
 	 * which will presumably want to send some sort of response to
 	 * the initiator.
 	 */
-	visorbus_device_resume_response(dev, status);
+	visorbus_device_changestate_response(dev, status,
+					     segment_state_running);
 }
 
 /*
