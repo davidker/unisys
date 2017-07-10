@@ -191,13 +191,6 @@ struct signal_queue_header {
 static const uuid_le visor_vhba_channel_uuid = VISOR_VHBA_CHANNEL_UUID;
 #define VISOR_VHBA_CHANNEL_UUID_STR \
 	"414815ed-c58c-11da-95a9-00e08161165f"
-/* {8cd5994d-c58e-11da-95a9-00e08161165f} */
-#define VISOR_VNIC_CHANNEL_UUID \
-	UUID_LE(0x8cd5994d, 0xc58e, 0x11da, \
-		0x95, 0xa9, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f)
-static const uuid_le visor_vnic_channel_uuid = VISOR_VNIC_CHANNEL_UUID;
-#define VISOR_VNIC_CHANNEL_UUID_STR \
-	"8cd5994d-c58e-11da-95a9-00e08161165f"
 /* {72120008-4AAB-11DC-8530-444553544200} */
 #define VISOR_SIOVM_UUID \
 	UUID_LE(0x72120008, 0x4AAB, 0x11DC, \
