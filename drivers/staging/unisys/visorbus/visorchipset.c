@@ -582,6 +582,13 @@ static int device_changestate_responder(
 					 CONTROLVM_QUEUE_REQUEST, &outmsg);
 }
 
+/* CHANNEL Guids */
+/* {72120008-4AAB-11DC-8530-444553544200} */
+#define VISOR_SIOVM_UUID \
+	UUID_LE(0x72120008, 0x4AAB, 0x11DC, \
+		0x85, 0x30, 0x44, 0x45, 0x53, 0x54, 0x42, 0x00)
+static const uuid_le visor_siovm_uuid = VISOR_SIOVM_UUID;
+
 static int visorbus_create(struct controlvm_message *inmsg)
 {
 	struct controlvm_message_packet *cmd = &inmsg->cmd;
