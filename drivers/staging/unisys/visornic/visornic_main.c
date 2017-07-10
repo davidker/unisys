@@ -221,7 +221,7 @@ static u16 add_physinfo_entries(u64 inp_pfn, u16 inp_off, u32 inp_len,
 		} else {
 			pi_arr[index + i].pi_off = 0;
 			pi_arr[index + i].pi_len =
-			    (u16)MINNUM(len, (u32)PI_PAGE_SIZE);
+			    (u16)min_t(u32, len, (u32)PI_PAGE_SIZE);
 		}
 	}
 	return index + i;
