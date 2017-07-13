@@ -255,6 +255,18 @@ static int signalremove_inner(struct visorchannel *channel, u32 queue,
 	return 0;
 }
 
+static int visorsignal_remove_lock(struct visorchannel *channel, u32 queue,
+				   void *msg)
+{
+	int rc;
+	unsigned long flags;
+
+	spin_lock_irqsave(&channel->remove_lock, flags);
+	rc = signalremove_inner(channel, queue, msg);
+	spin_unlock_irqrestore(&channel->remove_lock, flags);
+	return rc;
+}
+
 /**
  * visorchannel_signalremove() - removes a message from the designated
  *                               channel/queue
@@ -267,18 +279,9 @@ static int signalremove_inner(struct visorchannel *channel, u32 queue,
 int visorchannel_signalremove(struct visorchannel *channel, u32 queue,
 			      void *msg)
 {
-	int rc;
-	unsigned long flags;
-
-	if (channel->needs_lock) {
-		spin_lock_irqsave(&channel->remove_lock, flags);
-		rc = signalremove_inner(channel, queue, msg);
-		spin_unlock_irqrestore(&channel->remove_lock, flags);
-	} else {
-		rc = signalremove_inner(channel, queue, msg);
-	}
-
-	return rc;
+	if (channel->needs_lock)
+		return visorsignal_remove_lock(channel, queue, msg);
+	return signalremove_inner(channel, queue, msg);
 }
 EXPORT_SYMBOL_GPL(visorchannel_signalremove);
 
