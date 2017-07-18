@@ -1086,7 +1086,7 @@ err_debugfs_dir:
  * visorbus_remove_instance() - remove a device instance for the visorbus itself
  * @dev: struct visor_device indentifying the bus to remove
  */
-static void visorbus_remove_instance(struct visor_device *dev)
+void visorbus_remove_instance(struct visor_device *dev)
 {
 	kfree(dev->vbus_hdr_info);
 	list_del(&dev->list_all);
@@ -1102,6 +1102,7 @@ static void visorbus_remove_instance(struct visor_device *dev)
 	 */
 	list_del(&dev->list_all);
 	device_unregister(&dev->device);
+	visorbus_response(dev, 0, CONTROLVM_BUS_DESTROY);
 }
 
 /*
@@ -1117,12 +1118,6 @@ static void remove_all_visor_devices(void)
 						      list_all);
 		remove_visor_device(dev);
 	}
-}
-
-void visorchipset_bus_destroy(struct visor_device *dev)
-{
-	visorbus_remove_instance(dev);
-	visorbus_response(dev, 0, CONTROLVM_BUS_DESTROY);
 }
 
 int visorchipset_device_create(struct visor_device *dev_info)
