@@ -1,6 +1,4 @@
 /*
- * visorbus_private.h
- *
  * Copyright (C) 2010 - 2015 UNISYS CORPORATION
  * All rights reserved.
  *
