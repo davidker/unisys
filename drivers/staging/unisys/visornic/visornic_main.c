@@ -794,12 +794,11 @@ call_serverdown:
  *	@netdev: netdevice to start
  *
  *      Enable the device and start the transmit queue.
- *      Return 0 for success
+ *      Return 0 on success, negative on failure
  */
 static int visornic_open(struct net_device *netdev)
 {
-	visornic_enable_with_timeout(netdev, VISORNIC_INFINITE_RSP_WAIT);
-	return 0;
+	return visornic_enable_with_timeout(netdev, VISORNIC_INFINITE_RSP_WAIT);
 }
 
 /*
@@ -807,12 +806,12 @@ static int visornic_open(struct net_device *netdev)
  *	@netdev: netdevice to start
  *
  *      Disable the device and stop the transmit queue.
- *      Return 0 for success
+ *      Return 0 on success, negative on failure
  */
 static int visornic_close(struct net_device *netdev)
 {
-	visornic_disable_with_timeout(netdev, VISORNIC_INFINITE_RSP_WAIT);
-	return 0;
+	return visornic_disable_with_timeout(netdev,
+					     VISORNIC_INFINITE_RSP_WAIT);
 }
 
 /*
