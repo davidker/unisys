@@ -358,6 +358,36 @@ static int signalinsert_inner(struct visorchannel *channel, u32 queue,
 	return 0;
 }
 
+static int visorsignal_insert_lock(struct visorchannel *channel, u32 queue,
+				   void *msg)
+{
+	int rc;
+	unsigned long flags;
+
+	spin_lock_irqsave(&channel->insert_lock, flags);
+	rc = signalinsert_inner(channel, queue, msg);
+	spin_unlock_irqrestore(&channel->insert_lock, flags);
+	return rc;
+}
+
+/**
+ * visorchannel_signalinsert() - inserts a message into the designated
+ *                               channel/queue
+ * @channel: the channel the message will be added to
+ * @queue:   the queue the message will be added to
+ * @msg:     the message to insert
+ *
+ * Return: integer error code indicating the status of the insertion
+ */
+int visorchannel_signalinsert(struct visorchannel *channel, u32 queue,
+			      void *msg)
+{
+	if (channel->needs_lock)
+		return visorsignal_insert_lock(channel, queue, msg);
+	return signalinsert_inner(channel, queue, msg);
+}
+EXPORT_SYMBOL_GPL(visorchannel_signalinsert);
+
 /*
  * visorchannel_create_guts() - creates the struct visorchannel abstraction
  *                              for a data area in memory, but does NOT modify
@@ -454,29 +484,3 @@ struct visorchannel *visorchannel_create_with_lock(u64 physaddr, gfp_t gfp,
 	return visorchannel_create_guts(physaddr, gfp, guid, true);
 }
 
-/**
- * visorchannel_signalinsert() - inserts a message into the designated
- *                               channel/queue
- * @channel: the channel the message will be added to
- * @queue:   the queue the message will be added to
- * @msg:     the message to insert
- *
- * Return: integer error code indicating the status of the insertion
- */
-int visorchannel_signalinsert(struct visorchannel *channel, u32 queue,
-			      void *msg)
-{
-	int rc;
-	unsigned long flags;
-
-	if (channel->needs_lock) {
-		spin_lock_irqsave(&channel->insert_lock, flags);
-		rc = signalinsert_inner(channel, queue, msg);
-		spin_unlock_irqrestore(&channel->insert_lock, flags);
-	} else {
-		rc = signalinsert_inner(channel, queue, msg);
-	}
-
-	return rc;
-}
-EXPORT_SYMBOL_GPL(visorchannel_signalinsert);
