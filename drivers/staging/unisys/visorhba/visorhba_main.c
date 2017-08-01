@@ -39,8 +39,9 @@ static struct visor_channeltype_descriptor visorhba_channel_types[] = {
 	/* Note that the only channel type we expect to be reported by the
 	 * bus driver is the VISOR_VHBA channel.
 	 */
-	{ VISOR_VHBA_CHANNEL_UUID, "sparvhba" },
-	{ NULL_UUID_LE, NULL }
+	{ VISOR_VHBA_CHANNEL_UUID, "sparvhba", sizeof(struct channel_header),
+	  VISOR_VHBA_CHANNEL_VERSIONID },
+	{ NULL_UUID_LE, NULL, -1, -1}
 };
 
 MODULE_DEVICE_TABLE(visorbus, visorhba_channel_types);

@@ -711,9 +711,10 @@ out:
 
 /* GUIDS for all channel types supported by this driver. */
 static struct visor_channeltype_descriptor visorinput_channel_types[] = {
-	{ VISOR_KEYBOARD_CHANNEL_UUID, "keyboard"},
-	{ VISOR_MOUSE_CHANNEL_UUID, "mouse"},
-	{ NULL_UUID_LE, NULL }
+	{ VISOR_KEYBOARD_CHANNEL_UUID, "keyboard",
+	  sizeof(struct channel_header), 0 },
+	{ VISOR_MOUSE_CHANNEL_UUID, "mouse", sizeof(struct channel_header), 0 },
+	{ NULL_UUID_LE, NULL, -1, -1}
 };
 
 static struct visor_driver visorinput_driver = {

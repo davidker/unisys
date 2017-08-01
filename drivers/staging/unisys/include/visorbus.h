@@ -55,6 +55,8 @@ struct visorchipset_state {
 struct visor_channeltype_descriptor {
 	const uuid_le guid;
 	const char *name;
+	u64 min_bytes;
+	u32 version;
 };
 
 /**
