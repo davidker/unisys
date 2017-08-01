@@ -889,12 +889,23 @@ static void publish_vbus_dev_info(struct visor_device *visordev)
  */
 static int visordriver_probe_device(struct device *xdev)
 {
-	int res;
+	int i, res;
 	struct visor_driver *drv;
 	struct visor_device *dev;
+	struct visorchannel *chan;
 
 	dev = to_visor_device(xdev);
 	drv = to_visor_driver(xdev->driver);
+	chan = dev->visorchannel;
+
+	for (i = 0; !guid_is_null(&drv->channel_types[i].guid) != 0; i++)
+		if (!visor_check_channel(visorchannel_get_header(chan),
+					 &drv->channel_types[i].guid,
+					 (char *)drv->channel_types[i].name,
+					 drv->channel_types[i].min_bytes,
+					 drv->channel_types[i].version,
+					 VISOR_CHANNEL_SIGNATURE))
+			return -EINVAL;
 
 	mutex_lock(&dev->visordriver_callback_lock);
 	dev->being_removed = false;
