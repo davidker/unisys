@@ -464,10 +464,8 @@ static struct visorchannel *visorchannel_create_guts(
 		goto err_destroy_channel;
 
 	/* we had better be a CLIENT of this channel */
-	if (channel_bytes == 0)
-		channel_bytes = (ulong)channel->chan_hdr.size;
-	if (uuid_le_cmp(guid, NULL_UUID_LE) == 0)
-		guid = channel->chan_hdr.chtype;
+	channel_bytes = (ulong)channel->chan_hdr.size;
+	guid = channel->chan_hdr.chtype;
 
 	memunmap(channel->mapped);
 	if (channel->requested)
