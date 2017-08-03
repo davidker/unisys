@@ -463,7 +463,14 @@ static struct visorchannel *visorchannel_create_guts(
 	if (err)
 		goto err_destroy_channel;
 
-	/* we had better be a CLIENT of this channel */
+	/* we had better be a CLIENT of this channel */	
+	err = uuid_le_cmp(guid, channel->chan_hdr.chtype);
+	if (err)
+		pr_err("DAK ***** GUID *** NOT MATACHED  *** %pUl/%pUl", &guid,
+		       &channel->chan_hdr.chtype);
+	else
+		pr_err("DAK *?*?* GUID **** MATCHED *?*?* %pUl/%pUl", &guid,
+		       &channel->chan_hdr.chtype);
 	channel_bytes = (ulong)channel->chan_hdr.size;
 	guid = channel->chan_hdr.chtype;
 
