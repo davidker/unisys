@@ -549,8 +549,7 @@ static int visorbus_create(struct controlvm_message *inmsg)
 	}
 
 	if (inmsg->hdr.flags.response_expected == 1) {
-		pmsg_hdr = kzalloc(sizeof(*pmsg_hdr),
-				   GFP_KERNEL);
+		pmsg_hdr = kzalloc(sizeof(*pmsg_hdr), GFP_KERNEL);
 		if (!pmsg_hdr) {
 			err = -ENOMEM;
 			goto err_free_bus_info;
@@ -1010,13 +1009,13 @@ static int parahotplug_request_complete(int id, u16 active)
 {
 	struct list_head *pos;
 	struct list_head *tmp;
+	struct parahotplug_request *req;
 
 	spin_lock(&parahotplug_request_list_lock);
 
 	/* Look for a request matching "id". */
 	list_for_each_safe(pos, tmp, &parahotplug_request_list) {
-		struct parahotplug_request *req =
-		    list_entry(pos, struct parahotplug_request, list);
+		req = list_entry(pos, struct parahotplug_request, list);
 		if (req->id == id) {
 			/*
 			 * Found a match. Remove it from the list and
@@ -1216,9 +1215,7 @@ static int chipset_ready_uevent(struct controlvm_message_header *msg_hdr)
 {
 	int res;
 
-	res = kobject_uevent(&chipset_dev->acpi_device->dev.kobj,
-			     KOBJ_ONLINE);
-
+	res = kobject_uevent(&chipset_dev->acpi_device->dev.kobj, KOBJ_ONLINE);
 	if (msg_hdr->flags.response_expected)
 		controlvm_respond(msg_hdr, res, NULL);
 
