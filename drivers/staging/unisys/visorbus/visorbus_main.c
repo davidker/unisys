@@ -1110,6 +1110,7 @@ static int visorchipset_initiate_device_pause_resume(struct visor_device *dev,
 	/* If no driver associated with the device nothing to pause/resume */
 	if (!dev->device.driver)
 		return 0;
+
 	if (dev->pausing || dev->resuming)
 		return -EBUSY;
 
