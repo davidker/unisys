@@ -819,7 +819,7 @@ static void publish_vbus_dev_info(struct visor_device *visordev)
 
 	if (!visordev->device.driver)
 		return;
-	bdev = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	bdev = visorbus_get_device_by_id(bus_no, VISORBUS_ROOT_DEVICE, NULL);
 	if (!bdev)
 		return;
 	hdr_info = (struct visor_vbus_headerinfo *)bdev->vbus_hdr_info;

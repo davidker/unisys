@@ -23,6 +23,8 @@
 #include "vbuschannel.h"
 #include "visorbus.h"
 
+#define VISORBUS_ROOT_DEVICE UINT_MAX
+
 int visorbus_create_instance(struct visor_device *dev);
 void visorbus_remove_instance(struct visor_device *bus_info);
 int create_visor_device(struct visor_device *dev_info);

@@ -502,7 +502,8 @@ static int visorbus_create(struct controlvm_message *inmsg)
 	struct visorchannel *visorchannel;
 	int err;
 
-	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	bus_info = visorbus_get_device_by_id(bus_no, VISORBUS_ROOT_DEVICE,
+					     NULL);
 	if (bus_info && (bus_info->state.created == 1)) {
 		dev_err(&chipset_dev->acpi_device->dev,
 			"failed %s: already exists\n", __func__);
@@ -516,7 +517,7 @@ static int visorbus_create(struct controlvm_message *inmsg)
 	}
 	INIT_LIST_HEAD(&bus_info->list_all);
 	bus_info->chipset_bus_no = bus_no;
-	bus_info->chipset_dev_no = BUS_ROOT_DEVICE;
+	bus_info->chipset_dev_no = VISORBUS_ROOT_DEVICE;
 	if (guid_equal(&cmd->create_bus.bus_inst_guid, &visor_siovm_guid)) {
 		err = save_crash_message(inmsg, CRASH_BUS);
 		if (err)
@@ -568,7 +569,8 @@ static int visorbus_destroy(struct controlvm_message *inmsg)
 	struct visor_device *bus_info;
 	int err;
 
-	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	bus_info = visorbus_get_device_by_id(bus_no, VISORBUS_ROOT_DEVICE,
+					     NULL);
 	if (!bus_info) {
 		err = -ENODEV;
 		goto err_respond;
@@ -647,7 +649,8 @@ static int visorbus_configure(struct controlvm_message *inmsg,
 	int err = 0;
 
 	bus_no = cmd->configure_bus.bus_no;
-	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	bus_info = visorbus_get_device_by_id(bus_no, VISORBUS_ROOT_DEVICE,
+					     NULL);
 	if (!bus_info) {
 		err = -EINVAL;
 		goto err_respond;
@@ -694,7 +697,8 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	struct visorchannel *visorchannel;
 	int err;
 
-	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
+	bus_info = visorbus_get_device_by_id(bus_no, VISORBUS_ROOT_DEVICE,
+					     NULL);
 	if (!bus_info) {
 		dev_err(&chipset_dev->acpi_device->dev,
 			"failed to get bus by id: %d\n", bus_no);
