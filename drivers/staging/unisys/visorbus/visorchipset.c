@@ -304,6 +304,8 @@ static int match_visorbus_dev_by_id(struct device *dev, void *data)
 	return 0;
 }
 
+extern struct bus_type visorbus_type;
+
 struct visor_device *visorbus_get_device_by_id(u32 bus_no, u32 dev_no,
 					       struct visor_device *from)
 {
