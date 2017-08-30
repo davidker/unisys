@@ -20,9 +20,8 @@
 #include "visorbus_private.h"
 
 /* {72120008-4AAB-11DC-8530-444553544200} */
-#define VISOR_SIOVM_GUID \
-        GUID_INIT(0x72120008, 0x4AAB, 0x11DC, \
-                  0x85, 0x30, 0x44, 0x45, 0x53, 0x54, 0x42, 0x00)
+#define VISOR_SIOVM_GUID GUID_INIT(0x72120008, 0x4AAB, 0x11DC, 0x85, 0x30, \
+				   0x44, 0x45, 0x53, 0x54, 0x42, 0x00)
 
 static const guid_t visor_vhba_channel_guid = VISOR_VHBA_CHANNEL_GUID;
 static const guid_t visor_siovm_guid = VISOR_SIOVM_GUID;
@@ -41,9 +40,9 @@ static const guid_t visor_controlvm_channel_guid = VISOR_CONTROLVM_CHANNEL_GUID;
 #define UNISYS_VISOR_ID_EDX 0x34367261
 
 /*
- * When the controlvm channel is idle for at least MIN_IDLE_SECONDS,
- * we switch to slow polling mode. As soon as we get a controlvm
- * message, we switch back to fast polling mode.
+ * When the controlvm channel is idle for at least MIN_IDLE_SECONDS, we switch
+ * to slow polling mode. As soon as we get a controlvm message, we switch back
+ * to fast polling mode.
  */
 #define MIN_IDLE_SECONDS 10
 
@@ -53,7 +52,7 @@ struct parser_context {
 	u8 *curr;
 	unsigned long bytes_remaining;
 	bool byte_stream;
-	char data[0];
+	struct visor_controlvm_parameters_header data;
 };
 
 /* VMCALL_CONTROLVM_ADDR: Used by all guests, not just IO. */
@@ -86,12 +85,6 @@ struct vmcall_io_controlvm_addr_params {
 	u8 unused[4];
 } __packed;
 
-struct vmcall_controlvm_addr {
-	struct vmcall_io_controlvm_addr_params params;
-	int err;
-	u64 physaddr;
-};
-
 struct visorchipset_device {
 	struct acpi_device *acpi_device;
 	unsigned long poll_jiffies;
@@ -109,7 +102,7 @@ struct visorchipset_device {
 	 */
 	struct controlvm_message controlvm_pending_msg;
 	bool controlvm_pending_msg_valid;
-	struct vmcall_controlvm_addr controlvm_addr;
+	struct vmcall_io_controlvm_addr_params controlvm_params;
 };
 
 static struct visorchipset_device *chipset_dev;
@@ -303,67 +296,6 @@ static ssize_t remaining_steps_store(struct device *dev,
 }
 static DEVICE_ATTR_RW(remaining_steps);
 
-static const guid_t *parser_id_get(struct parser_context *ctx)
-{
-	struct visor_controlvm_parameters_header *phdr = NULL;
-
-	phdr = (struct visor_controlvm_parameters_header *)(ctx->data);
-	return &phdr->id;
-}
-
-static void parser_done(struct parser_context *ctx)
-{
-	chipset_dev->controlvm_payload_bytes_buffered -= ctx->param_bytes;
-	kfree(ctx);
-}
-
-static void *parser_string_get(struct parser_context *ctx)
-{
-	u8 *pscan;
-	unsigned long nscan;
-	int value_length = -1;
-	void *value = NULL;
-	int i;
-
-	pscan = ctx->curr;
-	if (!pscan)
-		return NULL;
-	nscan = ctx->bytes_remaining;
-	if (nscan == 0)
-		return NULL;
-
-	for (i = 0, value_length = -1; i < nscan; i++)
-		if (pscan[i] == '\0') {
-			value_length = i;
-			break;
-		}
-	/* '\0' was not included in the length */
-	if (value_length < 0)
-		value_length = nscan;
-
-	value = kmalloc(value_length + 1, GFP_KERNEL);
-	if (!value)
-		return NULL;
-	if (value_length > 0)
-		memcpy(value, pscan, value_length);
-	((u8 *)(value))[value_length] = '\0';
-	return value;
-}
-
-static void *parser_name_get(struct parser_context *ctx)
-{
-	struct visor_controlvm_parameters_header *phdr = NULL;
-
-	phdr = (struct visor_controlvm_parameters_header *)(ctx->data);
-
-	if (phdr->name_offset + phdr->name_length > ctx->param_bytes)
-		return NULL;
-
-	ctx->curr = ctx->data + phdr->name_offset;
-	ctx->bytes_remaining = phdr->name_length;
-	return parser_string_get(ctx);
-}
-
 struct visor_busdev {
 	u32 bus_no;
 	u32 dev_no;
@@ -444,15 +376,15 @@ static int chipset_init(struct controlvm_message *inmsg)
 	chipset_inited = 1;
 
 	/*
-	 * Set features to indicate we support parahotplug (if Command
-	 * also supports it).
+	 * Set features to indicate we support parahotplug (if Command also
+	 * supports it).
 	 */
 	features = inmsg->cmd.init_chipset.features &
 		   VISOR_CHIPSET_FEATURE_PARA_HOTPLUG;
 
 	/*
-	 * Set the "reply" bit so Command knows this is a
-	 * features-aware driver.
+	 * Set the "reply" bit so Command knows this is a features-aware
+	 * driver.
 	 */
 	features |= VISOR_CHIPSET_FEATURE_REPLY;
 
@@ -634,7 +566,6 @@ static int visorbus_create(struct controlvm_message *inmsg)
 	}
 
 	visorchannel = visorchannel_create(cmd->create_bus.channel_addr,
-					   cmd->create_bus.channel_bytes,
 					   GFP_KERNEL,
 					   &cmd->create_bus.bus_data_type_guid);
 	if (!visorchannel) {
@@ -710,6 +641,58 @@ err_respond:
 	return err;
 }
 
+static const guid_t *parser_id_get(struct parser_context *ctx)
+{
+	return &ctx->data.id;
+}
+
+static void *parser_string_get(struct parser_context *ctx)
+{
+	u8 *pscan;
+	unsigned long nscan;
+	int value_length;
+	void *value;
+	int i;
+
+	pscan = ctx->curr;
+	if (!pscan)
+		return NULL;
+	nscan = ctx->bytes_remaining;
+	if (nscan == 0)
+		return NULL;
+
+	for (i = 0, value_length = -1; i < nscan; i++)
+		if (pscan[i] == '\0') {
+			value_length = i;
+			break;
+		}
+	/* '\0' was not included in the length */
+	if (value_length < 0)
+		value_length = nscan;
+
+	value = kmalloc(value_length + 1, GFP_KERNEL);
+	if (!value)
+		return NULL;
+	if (value_length > 0)
+		memcpy(value, pscan, value_length);
+	((u8 *)(value))[value_length] = '\0';
+	return value;
+}
+
+static void *parser_name_get(struct parser_context *ctx)
+{
+	struct visor_controlvm_parameters_header *phdr = NULL;
+
+	phdr = &ctx->data;
+
+	if (phdr->name_offset + phdr->name_length > ctx->param_bytes)
+		return NULL;
+
+	ctx->curr = (char *)&phdr + phdr->name_offset;
+	ctx->bytes_remaining = phdr->name_length;
+	return parser_string_get(ctx);
+}
+
 static int visorbus_configure(struct controlvm_message *inmsg,
 			      struct parser_context *parser_ctx)
 {
@@ -723,10 +706,12 @@ static int visorbus_configure(struct controlvm_message *inmsg,
 	if (!bus_info) {
 		err = -EINVAL;
 		goto err_respond;
-	} else if (bus_info->state.created == 0) {
+	}
+	if (bus_info->state.created == 0) {
 		err = -EINVAL;
 		goto err_respond;
-	} else if (bus_info->pending_msg_hdr) {
+	}
+	if (bus_info->pending_msg_hdr) {
 		err = -EIO;
 		goto err_respond;
 	}
@@ -750,7 +735,7 @@ static int visorbus_configure(struct controlvm_message *inmsg,
 
 err_respond:
 	dev_err(&chipset_dev->acpi_device->dev,
-		"visorbus_configure exited with err: %d\n", err);
+		"%s exited with err: %d\n", __func__, err);
 	if (inmsg->hdr.flags.response_expected == 1)
 		controlvm_responder(inmsg->hdr.id, &inmsg->hdr, err);
 	return err;
@@ -798,13 +783,10 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	dev_info->chipset_bus_no = bus_no;
 	dev_info->chipset_dev_no = dev_no;
 	guid_copy(&dev_info->inst, &cmd->create_device.dev_inst_guid);
-
-	/* not sure where the best place to set the 'parent' */
 	dev_info->device.parent = &bus_info->device;
 
 	visorchannel =
 	       visorchannel_create_with_lock(cmd->create_device.channel_addr,
-					     cmd->create_device.channel_bytes,
 					     GFP_KERNEL,
 					     &cmd->create_device.data_type_guid);
 	if (!visorchannel) {
@@ -1225,10 +1207,9 @@ static int parahotplug_process_message(struct controlvm_message *inmsg)
 	}
 
 	/*
-	 * For disable messages, add the request to the
-	 * request list before kicking off the udev script. It
-	 * won't get responded to until the script has
-	 * indicated it's done.
+	 * For disable messages, add the request to the request list before
+	 * kicking off the udev script. It won't get responded to until the
+	 * script has indicated it's done.
 	 */
 	spin_lock(&parahotplug_request_list_lock);
 	list_add_tail(&req->list, &parahotplug_request_list);
@@ -1338,31 +1319,23 @@ error:
 	}
 }
 
-static unsigned int issue_vmcall_io_controlvm_addr(u64 *control_addr,
-						   u32 *control_bytes)
+static int controlvm_channel_create(struct visorchipset_device *dev)
 {
-	chipset_dev->controlvm_addr.physaddr = virt_to_phys(
-					   &chipset_dev->controlvm_addr.params);
-	chipset_dev->controlvm_addr.err = unisys_vmcall(VMCALL_CONTROLVM_ADDR,
-					  chipset_dev->controlvm_addr.physaddr);
-	if (chipset_dev->controlvm_addr.err)
-		return chipset_dev->controlvm_addr.err;
+	struct visorchannel *chan;
+	u64 addr;
+	int err;
 
-	*control_addr = chipset_dev->controlvm_addr.params.address;
-	*control_bytes = chipset_dev->controlvm_addr.params.channel_bytes;
-
+	err = unisys_vmcall(VMCALL_CONTROLVM_ADDR,
+			    virt_to_phys(&dev->controlvm_params));
+	if (err)
+		return err;
+	addr = dev->controlvm_params.address;
+	chan = visorchannel_create_with_lock(addr, GFP_KERNEL,
+					     &visor_controlvm_channel_guid);
+	if (!chan)
+		return -ENOMEM;
+	dev->controlvm_channel = chan;
 	return 0;
-}
-
-static u64 controlvm_get_channel_address(void)
-{
-	u64 addr = 0;
-	u32 size = 0;
-
-	if (issue_vmcall_io_controlvm_addr(&addr, &size))
-		return 0;
-
-	return addr;
 }
 
 static void setup_crash_devices_work_queue(struct work_struct *work)
@@ -1464,20 +1437,24 @@ void visorbus_device_changestate_response(struct visor_device *dev_info,
 	dev_info->pending_msg_hdr = NULL;
 }
 
-static struct parser_context *parser_init_byte_stream(u64 addr, u32 bytes,
-						      bool *retry)
+static void parser_done(struct parser_context *ctx)
 {
-	int allocbytes = sizeof(struct parser_context) + bytes;
+	chipset_dev->controlvm_payload_bytes_buffered -= ctx->param_bytes;
+	kfree(ctx);
+}
+
+static struct parser_context *parser_init_stream(u64 addr, u32 bytes,
+						 bool *retry)
+{
+	int allocbytes;
 	struct parser_context *ctx;
 	void *mapping;
 
 	*retry = false;
 
-	/*
-	 * alloc an 0 extra byte to ensure payload is
-	 * '\0'-terminated
-	 */
-	allocbytes++;
+	/* alloc an extra byte to ensure payload is \0 terminated */
+	allocbytes = bytes + 1 + (sizeof(struct parser_context) -
+		     sizeof(struct visor_controlvm_parameters_header));
 	if ((chipset_dev->controlvm_payload_bytes_buffered + bytes)
 	    > MAX_CONTROLVM_PAYLOAD_BYTES) {
 		*retry = true;
@@ -1491,13 +1468,10 @@ static struct parser_context *parser_init_byte_stream(u64 addr, u32 bytes,
 
 	ctx->allocbytes = allocbytes;
 	ctx->param_bytes = bytes;
-	ctx->curr = NULL;
-	ctx->bytes_remaining = 0;
-	ctx->byte_stream = false;
 	mapping = memremap(addr, bytes, MEMREMAP_WB);
 	if (!mapping)
 		goto err_finish_ctx;
-	memcpy(ctx->data, mapping, bytes);
+	memcpy(&ctx->data, mapping, bytes);
 	memunmap(mapping);
 	ctx->byte_stream = true;
 	chipset_dev->controlvm_payload_bytes_buffered += ctx->param_bytes;
@@ -1505,7 +1479,7 @@ static struct parser_context *parser_init_byte_stream(u64 addr, u32 bytes,
 	return ctx;
 
 err_finish_ctx:
-	parser_done(ctx);
+	kfree(ctx);
 	return NULL;
 }
 
@@ -1540,11 +1514,10 @@ static int handle_command(struct controlvm_message inmsg, u64 channel_addr)
 	 * within our OS-controlled memory. We need to know that, because it
 	 * makes a difference in how we compute the virtual address.
 	 */
-	if (parm_addr && parm_bytes) {
+	if (parm_bytes) {
 		bool retry = false;
 
-		parser_ctx =
-		    parser_init_byte_stream(parm_addr, parm_bytes, &retry);
+		parser_ctx = parser_init_stream(parm_addr, parm_bytes, &retry);
 		if (!parser_ctx && retry)
 			return -EAGAIN;
 	}
@@ -1575,8 +1548,8 @@ static int handle_command(struct controlvm_message inmsg, u64 channel_addr)
 			err = parahotplug_process_message(&inmsg);
 		} else {
 			/*
-			 * save the hdr and cmd structures for later use
-			 * when sending back the response to Command
+			 * save the hdr and cmd structures for later use when
+			 * sending back the response to Command
 			 */
 			err = visorbus_device_changestate(&inmsg);
 			break;
@@ -1685,9 +1658,8 @@ static void controlvm_periodic_work(struct work_struct *work)
 
 	if (chipset_dev->controlvm_pending_msg_valid) {
 		/*
-		 * we throttled processing of a prior
-		 * msg, so try to process it again
-		 * rather than reading a new one
+		 * we throttled processing of a prior msg, so try to process
+		 * it again rather than reading a new one
 		 */
 		inmsg = chipset_dev->controlvm_pending_msg;
 		chipset_dev->controlvm_pending_msg_valid = false;
@@ -1722,9 +1694,8 @@ schedule_out:
 	if (time_after(jiffies, chipset_dev->most_recent_message_jiffies +
 				(HZ * MIN_IDLE_SECONDS))) {
 		/*
-		 * it's been longer than MIN_IDLE_SECONDS since we
-		 * processed our last controlvm message; slow down the
-		 * polling
+		 * it's been longer than MIN_IDLE_SECONDS since we processed
+		 * our last controlvm message; slow down the polling
 		 */
 		if (chipset_dev->poll_jiffies !=
 					      POLLJIFFIES_CONTROLVMCHANNEL_SLOW)
@@ -1744,33 +1715,28 @@ schedule_out:
 static int visorchipset_init(struct acpi_device *acpi_device)
 {
 	int err = -ENODEV;
-	u64 addr;
 	struct visorchannel *controlvm_channel;
 
 	chipset_dev = kzalloc(sizeof(*chipset_dev), GFP_KERNEL);
 	if (!chipset_dev)
 		goto error;
 
-	addr = controlvm_get_channel_address();
-	if (!addr)
-		goto error;
+	err = controlvm_channel_create(chipset_dev);
+	if (err)
+		goto error_free_chipset_dev;
 
 	acpi_device->driver_data = chipset_dev;
 	chipset_dev->acpi_device = acpi_device;
 	chipset_dev->poll_jiffies = POLLJIFFIES_CONTROLVMCHANNEL_FAST;
-	controlvm_channel = visorchannel_create_with_lock(addr, 0, GFP_KERNEL,
-						&visor_controlvm_channel_guid);
-	if (!controlvm_channel)
-		goto error_free_chipset_dev;
-
-	chipset_dev->controlvm_channel = controlvm_channel;
 
 	err = sysfs_create_groups(&chipset_dev->acpi_device->dev.kobj,
 				  visorchipset_dev_groups);
 	if (err < 0)
 		goto error_destroy_channel;
 
+	controlvm_channel = chipset_dev->controlvm_channel;
 	if (!visor_check_channel(visorchannel_get_header(controlvm_channel),
+				 &chipset_dev->acpi_device->dev,
 				 &visor_controlvm_channel_guid,
 				 "controlvm",
 				 sizeof(struct visor_controlvm_channel),
@@ -1856,9 +1822,8 @@ static __init int visorutil_spar_detect(void)
 		return  (ebx == UNISYS_VISOR_ID_EBX) &&
 			(ecx == UNISYS_VISOR_ID_ECX) &&
 			(edx == UNISYS_VISOR_ID_EDX);
-	} else {
-		return 0;
 	}
+	return 0;
 }
 
 static int init_unisys(void)

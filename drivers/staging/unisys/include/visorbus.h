@@ -55,6 +55,8 @@ struct visorchipset_state {
 struct visor_channeltype_descriptor {
 	const guid_t guid;
 	const char *name;
+	u64 min_bytes;
+	u32 version;
 };
 
 /**
@@ -104,8 +106,7 @@ struct visor_driver {
 	struct device_driver driver;
 };
 
-#define to_visor_driver(x) ((x) ? \
-	(container_of(x, struct visor_driver, driver)) : (NULL))
+#define to_visor_driver(x) (container_of(x, struct visor_driver, driver))
 
 /**
  * struct visor_device - A device type for things "plugged" into the visorbus
@@ -120,8 +121,8 @@ struct visor_driver {
  *				activity.
  * @being_removed:		Indicates that the device is being removed from
  *				the bus. Private bus driver use only.
- * @visordriver_callback_lock:	Used by the bus driver to lock when handling
- *				channel events.
+ * @visordriver_callback_lock:	Used by the bus driver to lock when adding and
+ *				removing devices.
  * @pausing:			Indicates that a change towards a paused state.
  *				is in progress. Only modified by the bus driver.
  * @resuming:			Indicates that a change towards a running state
@@ -150,7 +151,7 @@ struct visor_device {
 	struct timer_list timer;
 	bool timer_active;
 	bool being_removed;
-	struct mutex visordriver_callback_lock;
+	struct mutex visordriver_callback_lock; /* synchronize probe/remove */
 	bool pausing;
 	bool resuming;
 	u32 chipset_bus_no;
@@ -167,9 +168,10 @@ struct visor_device {
 
 #define to_visor_device(x) container_of(x, struct visor_device, device)
 
-int visor_check_channel(struct channel_header *ch, const guid_t *expected_guid,
-			char *chname, u64 expected_min_bytes,
-			u32 expected_version, u64 expected_signature);
+int visor_check_channel(struct channel_header *ch, struct device *dev,
+			const guid_t *expected_uuid, char *chname,
+			u64 expected_min_bytes,	u32 expected_version,
+			u64 expected_signature);
 
 int visorbus_register_visor_driver(struct visor_driver *drv);
 void visorbus_unregister_visor_driver(struct visor_driver *drv);

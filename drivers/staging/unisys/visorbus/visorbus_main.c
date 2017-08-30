@@ -70,6 +70,7 @@ static LIST_HEAD(list_all_device_instances);
  * is used to pass the EFI_DIAG_CAPTURE_PROTOCOL needed to log messages.
  */
 int visor_check_channel(struct channel_header *ch,
+			struct device *dev,
 			const guid_t *expected_guid,
 			char *chname,
 			u64 expected_min_bytes,
@@ -79,44 +80,43 @@ int visor_check_channel(struct channel_header *ch,
 	if (!guid_is_null(expected_guid)) {
 		/* caller wants us to verify type GUID */
 		if (!guid_equal(&ch->chtype, expected_guid)) {
-			pr_err("Channel mismatch on channel=%s(%pUL) field=type expected=%pUL actual=%pUL\n",
-			       chname, expected_guid,
-			       expected_guid, &ch->chtype);
+			dev_err(dev, "Channel mismatch on channel=%s(%pUL) field=type expected=%pUL actual=%pUL\n",
+				chname, expected_guid, expected_guid,
+				&ch->chtype);
 			return 0;
 		}
 	}
 	/* verify channel size */
 	if (expected_min_bytes > 0) {
 		if (ch->size < expected_min_bytes) {
-			pr_err("Channel mismatch on channel=%s(%pUL) field=size expected=0x%-8.8Lx actual=0x%-8.8Lx\n",
-			       chname, expected_guid,
-			       (unsigned long long)expected_min_bytes,
-			       ch->size);
+			dev_err(dev, "Channel mismatch on channel=%s(%pUL) field=size expected=0x%-8.8Lx actual=0x%-8.8Lx\n",
+				chname, expected_guid,
+				(unsigned long long)expected_min_bytes,
+				ch->size);
 			return 0;
 		}
 	}
 	/* verify channel version */
 	if (expected_version > 0) {
 		if (ch->version_id != expected_version) {
-			pr_err("Channel mismatch on channel=%s(%pUL) field=version expected=0x%-8.8lx actual=0x%-8.8x\n",
-			       chname, expected_guid,
-			       (unsigned long)expected_version,
-			       ch->version_id);
+			dev_err(dev, "Channel mismatch on channel=%s(%pUL) field=version expected=0x%-8.8lx actual=0x%-8.8x\n",
+				chname, expected_guid,
+				(unsigned long)expected_version,
+				ch->version_id);
 			return 0;
 		}
 	}
 	/* verify channel signature */
 	if (expected_signature > 0) {
 		if (ch->signature != expected_signature) {
-			pr_err("Channel mismatch on channel=%s(%pUL) field=signature expected=0x%-8.8Lx actual=0x%-8.8Lx\n",
-			       chname, expected_guid,
-			       expected_signature, ch->signature);
+			dev_err(dev, "Channel mismatch on channel=%s(%pUL) field=signature expected=0x%-8.8Lx actual=0x%-8.8Lx\n",
+				chname, expected_guid,	expected_signature,
+				ch->signature);
 			return 0;
 		}
 	}
 	return 1;
 }
-EXPORT_SYMBOL_GPL(visor_check_channel);
 
 static int visorbus_uevent(struct device *xdev, struct kobj_uevent_env *env)
 {
@@ -151,9 +151,7 @@ static int visorbus_match(struct device *xdev, struct device_driver *xdrv)
 	if (!drv->channel_types)
 		return 0;
 
-	for (i = 0;
-	     !guid_is_null(&drv->channel_types[i].guid) || drv->channel_types[i].name;
-	     i++)
+	for (i = 0; !guid_is_null(&drv->channel_types[i].guid); i++)
 		if (guid_equal(&drv->channel_types[i].guid, channel_type))
 			return i + 1;
 
@@ -702,11 +700,13 @@ void remove_visor_device(struct visor_device *dev)
 }
 
 static int get_vbus_header_info(struct visorchannel *chan,
+				struct device *dev,
 				struct visor_vbus_headerinfo *hdr_info)
 {
 	int err;
 
 	if (!visor_check_channel(visorchannel_get_header(chan),
+				 dev,
 				 &visor_vbus_channel_guid,
 				 "vbus",
 				 sizeof(struct visor_vbus_channel),
@@ -892,12 +892,24 @@ static void publish_vbus_dev_info(struct visor_device *visordev)
  */
 static int visordriver_probe_device(struct device *xdev)
 {
-	int res;
+	int i, res;
 	struct visor_driver *drv;
 	struct visor_device *dev;
+	struct visorchannel *chan;
 
 	dev = to_visor_device(xdev);
 	drv = to_visor_driver(xdev->driver);
+	chan = dev->visorchannel;
+
+	for (i = 0; !guid_is_null(&drv->channel_types[i].guid) != 0; i++)
+		if (!visor_check_channel(visorchannel_get_header(chan),
+					 xdev,
+					 &drv->channel_types[i].guid,
+					 (char *)drv->channel_types[i].name,
+					 drv->channel_types[i].min_bytes,
+					 drv->channel_types[i].version,
+					 VISOR_CHANNEL_SIGNATURE))
+			return -EINVAL;
 
 	mutex_lock(&dev->visordriver_callback_lock);
 	dev->being_removed = false;
@@ -969,16 +981,16 @@ int visorbus_register_visor_driver(struct visor_driver *drv)
 		return -ENODEV;
 
 	if (!drv->probe)
-		return -ENODEV;
+		return -EINVAL;
 
 	if (!drv->remove)
-		return -ENODEV;
+		return -EINVAL;
 
 	if (!drv->pause)
-		return -ENODEV;
+		return -EINVAL;
 
 	if (!drv->resume)
-		return -ENODEV;
+		return -EINVAL;
 
 	drv->driver.name = drv->name;
 	drv->driver.bus = &visorbus_type;
@@ -1033,7 +1045,7 @@ int visorbus_create_instance(struct visor_device *dev)
 				    &client_bus_info_debugfs_fops);
 
 	dev_set_drvdata(&dev->device, dev);
-	err = get_vbus_header_info(dev->visorchannel, hdr_info);
+	err = get_vbus_header_info(dev->visorchannel, &dev->device, hdr_info);
 	if (err < 0)
 		goto err_debugfs_dir;
 
@@ -1158,13 +1170,13 @@ static int visorchipset_initiate_device_pause_resume(struct visor_device *dev,
 	int err;
 	struct visor_driver *drv = NULL;
 
-	drv = to_visor_driver(dev->device.driver);
-	if (!drv)
-		return -ENODEV;
-
+	/* If no driver associated with the device nothing to pause/resume */
+	if (!dev->device.driver)
+		return 0;
 	if (dev->pausing || dev->resuming)
 		return -EBUSY;
 
+	drv = to_visor_driver(dev->device.driver);
 	if (is_pause) {
 		dev->pausing = true;
 		err = drv->pause(dev, pause_state_change_complete);
