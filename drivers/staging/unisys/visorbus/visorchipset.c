@@ -594,7 +594,6 @@ static int visorbus_destroy(struct controlvm_message *inmsg)
 		       sizeof(struct controlvm_message_header));
 		bus_info->pending_msg_hdr = pmsg_hdr;
 	}
-
 	/* Response will be handled by visorbus_remove_instance */
 	visorbus_remove_instance(bus_info);
 	return 0;
@@ -634,7 +633,6 @@ static void *parser_name_get(struct parser_context *ctx)
 	phdr = &ctx->data;
 	if (phdr->name_offset + phdr->name_length > ctx->param_bytes)
 		return NULL;
-
 	ctx->curr = (char *)&phdr + phdr->name_offset;
 	ctx->bytes_remaining = phdr->name_length;
 	return parser_string_get(ctx->curr, phdr->name_length);
@@ -662,7 +660,6 @@ static int visorbus_configure(struct controlvm_message *inmsg,
 		err = -EIO;
 		goto err_respond;
 	}
-
 	err = visorchannel_set_clientpartition(bus_info->visorchannel,
 					       cmd->configure_bus.guest_handle);
 	if (err)
@@ -749,7 +746,6 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 			err = -ENOMEM;
 			goto err_destroy_visorchannel;
 		}
-
 		memcpy(pmsg_hdr, &inmsg->hdr,
 		       sizeof(struct controlvm_message_header));
 		dev_info->pending_msg_hdr = pmsg_hdr;
@@ -854,7 +850,6 @@ static int visorbus_device_destroy(struct controlvm_message *inmsg)
 		err = -EIO;
 		goto err_respond;
 	}
-
 	if (inmsg->hdr.flags.response_expected == 1) {
 		pmsg_hdr = kzalloc(sizeof(*pmsg_hdr), GFP_KERNEL);
 		if (!pmsg_hdr) {
@@ -1534,7 +1529,6 @@ static void parahotplug_process_list(void)
 
 		if (!time_after_eq(jiffies, req->expiration))
 			continue;
-
 		list_del(pos);
 		if (req->msg.hdr.flags.response_expected)
 			controlvm_respond(
@@ -1560,7 +1554,6 @@ static void controlvm_periodic_work(struct work_struct *work)
 	} while ((!err) && (++count < CONTROLVM_MESSAGE_MAX));
 	if (err != -EAGAIN)
 		goto schedule_out;
-
 	if (chipset_dev->controlvm_pending_msg_valid) {
 		/*
 		 * we throttled processing of a prior msg, so try to process
@@ -1618,7 +1611,6 @@ static int visorchipset_init(struct acpi_device *acpi_device)
 	chipset_dev = kzalloc(sizeof(*chipset_dev), GFP_KERNEL);
 	if (!chipset_dev)
 		goto error;
-
 	err = controlvm_channel_create(chipset_dev);
 	if (err)
 		goto error_free_chipset_dev;
@@ -1679,7 +1671,6 @@ static int visorchipset_exit(struct acpi_device *acpi_device)
 			    visorchipset_dev_groups);
 	visorchannel_destroy(chipset_dev->controlvm_channel);
 	kfree(chipset_dev);
-
 	return 0;
 }
 
