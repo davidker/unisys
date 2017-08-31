@@ -74,15 +74,11 @@ enum vmcall_result {
  * @address:	   The Guest-relative physical address of the ControlVm channel.
  *		   This VMCall fills this in with the appropriate address.
  *		   Contents provided by this VMCALL (OUT).
- * @channel_bytes: The size of the ControlVm channel in bytes This VMCall fills
- *		   this in with the appropriate address. Contents provided by
- *		   this VMCALL (OUT).
  * @unused:	   Unused Bytes in the 64-Bit Aligned Struct.
  */
 struct vmcall_io_controlvm_addr_params {
 	u64 address;
-	u32 channel_bytes;
-	u8 unused[4];
+	u8 unused[8];
 } __packed;
 
 struct visorchipset_device {
