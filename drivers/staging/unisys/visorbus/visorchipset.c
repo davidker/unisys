@@ -737,7 +737,7 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 		goto err_free_dev_info;
 	}
 	dev_info->visorchannel = chan;
-	guid_copy(&dev_info->channel_type_guid, &cmd->create_dev.data_type_guid);
+	guid_copy(&dev_info->chan_type_guid, &cmd->create_dev.data_type_guid);
 	if (guid_equal(&cmd->create_dev.data_type_guid, &visor_vhba_channel_guid)) {
 		err = save_crash_message(inmsg, CRASH_DEV);
 		if (err)

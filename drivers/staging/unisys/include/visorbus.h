@@ -45,7 +45,7 @@ struct visorchipset_state {
  * bus
  * @visorchannel:		Points to the channel that the device is
  *				associated with.
- * @channel_type_guid:		Identifies the channel type to the bus driver.
+ * @chan_type_guid:		Identifies the channel type to the bus driver.
  * @device:			Device struct meant for use by the bus driver
  *				only.
  * @list_all:			Used by the bus driver to enumerate devices.
@@ -76,7 +76,7 @@ struct visorchipset_state {
 
 struct visor_device {
 	struct visorchannel *visorchannel;
-	guid_t channel_type_guid;
+	guid_t chan_type_guid;
 	/* These fields are for private use by the bus driver only. */
 	struct device device;
 	struct list_head list_all;
