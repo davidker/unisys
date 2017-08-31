@@ -23,9 +23,9 @@
 #define VISOR_SIOVM_GUID GUID_INIT(0x72120008, 0x4AAB, 0x11DC, 0x85, 0x30, \
 				   0x44, 0x45, 0x53, 0x54, 0x42, 0x00)
 
-static const guid_t visor_vhba_channel_guid = VISOR_VHBA_CHANNEL_GUID;
+static const guid_t visor_vhba_chan_guid = VISOR_VHBA_CHANNEL_GUID;
 static const guid_t visor_siovm_guid = VISOR_SIOVM_GUID;
-static const guid_t visor_controlvm_channel_guid = VISOR_CONTROLVM_CHANNEL_GUID;
+static const guid_t visor_controlvm_chan_guid = VISOR_CONTROLVM_CHANNEL_GUID;
 
 #define POLLJIFFIES_CONTROLVMCHANNEL_FAST 1
 #define POLLJIFFIES_CONTROLVMCHANNEL_SLOW 100
@@ -738,7 +738,7 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	}
 	dev_info->visorchannel = chan;
 	guid_copy(&dev_info->chan_type_guid, &cmd->create_dev.data_type_guid);
-	if (guid_equal(&cmd->create_dev.data_type_guid, &visor_vhba_channel_guid)) {
+	if (guid_equal(&cmd->create_dev.data_type_guid, &visor_vhba_chan_guid)) {
 		err = save_crash_message(inmsg, CRASH_DEV);
 		if (err)
 			goto err_destroy_visorchannel;
@@ -1250,7 +1250,7 @@ static int controlvm_channel_create(struct visorchipset_device *dev)
 		return err;
 	addr = dev->controlvm_params.address;
 	chan = visorchannel_create_with_lock(addr, GFP_KERNEL,
-					     &visor_controlvm_channel_guid);
+					     &visor_controlvm_chan_guid);
 	if (!chan)
 		return -ENOMEM;
 	dev->controlvm_channel = chan;
@@ -1636,8 +1636,7 @@ static int visorchipset_init(struct acpi_device *acpi_device)
 	controlvm_channel = chipset_dev->controlvm_channel;
 	if (!visor_check_channel(visorchannel_get_header(controlvm_channel),
 				 &chipset_dev->acpi_device->dev,
-				 &visor_controlvm_channel_guid,
-				 "controlvm",
+				 &visor_controlvm_chan_guid, "controlvm",
 				 sizeof(struct visor_controlvm_channel),
 				 VISOR_CONTROLVM_CHANNEL_VERSIONID,
 				 VISOR_CHANNEL_SIGNATURE))
