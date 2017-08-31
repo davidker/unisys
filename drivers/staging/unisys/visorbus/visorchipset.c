@@ -501,7 +501,7 @@ static int visorbus_create(struct controlvm_message *inmsg)
 	struct controlvm_message_header *pmsg_hdr = NULL;
 	u32 bus_no = cmd->create_bus.bus_no;
 	struct visor_device *bus_info;
-	struct visorchannel *visorchannel;
+	struct visorchannel *chan;
 	int err;
 
 	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
@@ -534,14 +534,14 @@ static int visorbus_create(struct controlvm_message *inmsg)
 		       sizeof(struct controlvm_message_header));
 		bus_info->pending_msg_hdr = pmsg_hdr;
 	}
-	visorchannel = visorchannel_create(cmd->create_bus.channel_addr,
-					   GFP_KERNEL,
-					   &cmd->create_bus.bus_data_type_guid);
-	if (!visorchannel) {
+	chan = visorchannel_create(cmd->create_bus.channel_addr,
+				   GFP_KERNEL,
+				   &cmd->create_bus.bus_data_type_guid);
+	if (!chan) {
 		err = -ENOMEM;
 		goto err_free_pending_msg;
 	}
-	bus_info->visorchannel = visorchannel;
+	bus_info->visorchannel = chan;
 	/* Response will be handled by visorbus_create_instance on success */
 	err = visorbus_create_instance(bus_info);
 	if (err)
@@ -549,7 +549,7 @@ static int visorbus_create(struct controlvm_message *inmsg)
 	return 0;
 
 err_destroy_channel:
-	visorchannel_destroy(visorchannel);
+	visorchannel_destroy(chan);
 
 err_free_pending_msg:
 	kfree(bus_info->pending_msg_hdr);
@@ -693,7 +693,7 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	u32 dev_no = cmd->create_device.dev_no;
 	struct visor_device *dev_info = NULL;
 	struct visor_device *bus_info;
-	struct visorchannel *visorchannel;
+	struct visorchannel *chan;
 	int err;
 
 	bus_info = visorbus_get_device_by_id(bus_no, BUS_ROOT_DEVICE, NULL);
@@ -726,18 +726,17 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	dev_info->chipset_dev_no = dev_no;
 	guid_copy(&dev_info->inst, &cmd->create_device.dev_inst_guid);
 	dev_info->device.parent = &bus_info->device;
-	visorchannel =
-	       visorchannel_create_with_lock(cmd->create_device.channel_addr,
+	chan = visorchannel_create_with_lock(cmd->create_device.channel_addr,
 					     GFP_KERNEL,
 					     &cmd->create_device.data_type_guid);
-	if (!visorchannel) {
+	if (!chan) {
 		dev_err(&chipset_dev->acpi_device->dev,
 			"failed to create visorchannel: %d/%d\n",
 			bus_no, dev_no);
 		err = -ENOMEM;
 		goto err_free_dev_info;
 	}
-	dev_info->visorchannel = visorchannel;
+	dev_info->visorchannel = chan;
 	guid_copy(&dev_info->channel_type_guid, &cmd->create_device.data_type_guid);
 	if (guid_equal(&cmd->create_device.data_type_guid, &visor_vhba_channel_guid)) {
 		err = save_crash_message(inmsg, CRASH_DEV);
@@ -763,7 +762,7 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	return 0;
 
 err_destroy_visorchannel:
-	visorchannel_destroy(visorchannel);
+	visorchannel_destroy(chan);
 
 err_free_dev_info:
 	kfree(dev_info);
