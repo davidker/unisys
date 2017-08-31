@@ -317,7 +317,7 @@ struct controlvm_message_device_configure  {
  *			      The corresponding sendBusInterruptHandle is kept
  *			      in CP.
  *
- * @struct create_device:	For CONTROLVM_DEVICE_CREATE.
+ * @struct create_dev:		For CONTROLVM_DEVICE_CREATE.
  *
  * @struct destroy_device:	For CONTROLVM_DEVICE_DESTROY.
  *	@bus_no: Bus # (0..n-1) from the msg receiver's perspective.
@@ -385,7 +385,7 @@ struct controlvm_message_packet  {
 			u64 guest_handle;
 			u64 recv_bus_irq_handle;
 		} __packed configure_bus;
-		struct controlvm_packet_device_create create_device;
+		struct controlvm_packet_device_create create_dev;
 		struct  {
 			u32 bus_no;
 			u32 dev_no;
