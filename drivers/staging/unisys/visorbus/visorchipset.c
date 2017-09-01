@@ -383,8 +383,7 @@ out_respond:
 }
 
 static int controlvm_respond(struct controlvm_message_header *msg_hdr,
-			     int response,
-			     struct visor_segment_state *state)
+			     int response, struct visor_segment_state *state)
 {
 	struct controlvm_message outmsg;
 
@@ -438,8 +437,7 @@ static int save_crash_message(struct controlvm_message *msg,
 	case CRASH_DEV:
 		local_crash_msg_offset += sizeof(struct controlvm_message);
 		err = visorchannel_write(chipset_dev->controlvm_channel,
-					 local_crash_msg_offset,
-					 msg,
+					 local_crash_msg_offset, msg,
 					 sizeof(struct controlvm_message));
 		if (err) {
 			dev_err(&chipset_dev->acpi_device->dev,
@@ -449,8 +447,7 @@ static int save_crash_message(struct controlvm_message *msg,
 		break;
 	case CRASH_BUS:
 		err = visorchannel_write(chipset_dev->controlvm_channel,
-					 local_crash_msg_offset,
-					 msg,
+					 local_crash_msg_offset, msg,
 					 sizeof(struct controlvm_message));
 		if (err) {
 			dev_err(&chipset_dev->acpi_device->dev,
@@ -533,8 +530,7 @@ static int visorbus_create(struct controlvm_message *inmsg)
 		       sizeof(struct controlvm_message_header));
 		bus_info->pending_msg_hdr = pmsg_hdr;
 	}
-	chan = visorchannel_create(cmd->create_bus.channel_addr,
-				   GFP_KERNEL,
+	chan = visorchannel_create(cmd->create_bus.channel_addr, GFP_KERNEL,
 				   &cmd->create_bus.bus_data_type_guid);
 	if (!chan) {
 		err = -ENOMEM;
@@ -1274,8 +1270,7 @@ static void setup_crash_devices_work_queue(struct work_struct *work)
 		return;
 	}
 	if (local_crash_msg_count != CONTROLVM_CRASHMSG_MAX) {
-		dev_err(&chipset_dev->acpi_device->dev,
-			"invalid count\n");
+		dev_err(&chipset_dev->acpi_device->dev, "invalid count\n");
 		return;
 	}
 	/* get saved crash message offset */
@@ -1340,8 +1335,8 @@ void visorbus_device_changestate_response(struct visor_device *dev_info,
 	if (!dev_info->pending_msg_hdr)
 		return;
 
-	device_changestate_responder(CONTROLVM_DEVICE_CHANGESTATE,
-				     dev_info, response, state);
+	device_changestate_responder(CONTROLVM_DEVICE_CHANGESTATE, dev_info,
+				     response, state);
 	kfree(dev_info->pending_msg_hdr);
 	dev_info->pending_msg_hdr = NULL;
 }
@@ -1363,8 +1358,8 @@ static struct parser_context *parser_init_stream(u64 addr, u32 bytes,
 	/* alloc an extra byte to ensure payload is \0 terminated */
 	allocbytes = bytes + 1 + (sizeof(struct parser_context) -
 		     sizeof(struct visor_controlvm_parameters_header));
-	if ((chipset_dev->controlvm_payload_bytes_buffered + bytes)
-	    > MAX_CONTROLVM_PAYLOAD_BYTES) {
+	if ((chipset_dev->controlvm_payload_bytes_buffered + bytes) >
+	     MAX_CONTROLVM_PAYLOAD_BYTES) {
 		*retry = true;
 		return NULL;
 	}
