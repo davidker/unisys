@@ -334,7 +334,7 @@ struct controlvm_message_device_configure  {
  *	@struct state:
  *	@reserved: Natural alignment purposes.
  *
- * @struct device_change_state:	For CONTROLVM_DEVICE_CHANGESTATE.
+ * @struct dev_change_state:	For CONTROLVM_DEVICE_CHANGESTATE.
  *	@bus_no:
  *	@dev_no:
  *	@struct state:
@@ -344,7 +344,7 @@ struct controlvm_message_device_configure  {
  *		@reserved1:   Natural alignment.
  *	@reserved:    Natural alignment purposes.
  *
- * @struct device_change_state_event:	For CONTROLVM_DEVICE_CHANGESTATE_EVENT.
+ * @struct dev_change_state_event:	For CONTROLVM_DEVICE_CHANGESTATE_EVENT.
  *	@bus_no:
  *	@dev_no:
  *	@struct state:
@@ -410,13 +410,13 @@ struct controlvm_message_packet  {
 				u32 reserved1;
 			} __packed flags;
 			u8 reserved[2];
-		} __packed device_change_state;
+		} __packed dev_change_state;
 		struct  {
 			u32 bus_no;
 			u32 dev_no;
 			struct visor_segment_state state;
 			u8 reserved[6];
-		} __packed device_change_state_event;
+		} __packed dev_change_state_event;
 		struct  {
 			u32 bus_count;
 			u32 switch_count;

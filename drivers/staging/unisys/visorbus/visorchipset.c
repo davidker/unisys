@@ -391,8 +391,8 @@ static int controlvm_respond(struct controlvm_message_header *msg_hdr,
 	if (outmsg.hdr.flags.test_message == 1)
 		return -EINVAL;
 	if (state) {
-		outmsg.cmd.device_change_state.state = *state;
-		outmsg.cmd.device_change_state.flags.phys_device = 1;
+		outmsg.cmd.dev_change_state.state = *state;
+		outmsg.cmd.dev_change_state.flags.phys_device = 1;
 	}
 	return visorchannel_signalinsert(chipset_dev->controlvm_channel,
 					 CONTROLVM_QUEUE_REQUEST, &outmsg);
@@ -484,9 +484,9 @@ static int device_changestate_responder(
 		return -EINVAL;
 
 	controlvm_init_response(&outmsg, p->pending_msg_hdr, response);
-	outmsg.cmd.device_change_state.bus_no = p->chipset_bus_no;
-	outmsg.cmd.device_change_state.dev_no = p->chipset_dev_no;
-	outmsg.cmd.device_change_state.state = response_state;
+	outmsg.cmd.dev_change_state.bus_no = p->chipset_bus_no;
+	outmsg.cmd.dev_change_state.dev_no = p->chipset_dev_no;
+	outmsg.cmd.dev_change_state.state = response_state;
 	return visorchannel_signalinsert(chipset_dev->controlvm_channel,
 					 CONTROLVM_QUEUE_REQUEST, &outmsg);
 }
@@ -768,9 +768,9 @@ static int visorbus_device_changestate(struct controlvm_message *inmsg)
 {
 	struct controlvm_message_packet *cmd = &inmsg->cmd;
 	struct controlvm_message_header *pmsg_hdr;
-	u32 bus_no = cmd->device_change_state.bus_no;
-	u32 dev_no = cmd->device_change_state.dev_no;
-	struct visor_segment_state state = cmd->device_change_state.state;
+	u32 bus_no = cmd->dev_change_state.bus_no;
+	u32 dev_no = cmd->dev_change_state.dev_no;
+	struct visor_segment_state state = cmd->dev_change_state.state;
 	struct visor_device *dev_info;
 	int err = 0;
 
@@ -962,21 +962,21 @@ static int parahotplug_request_complete(int id, u16 active)
 	/* Look for a request matching "id". */
 	list_for_each_safe(pos, tmp, &parahotplug_request_list) {
 		req = list_entry(pos, struct parahotplug_request, list);
-		if (req->id == id) {
-			/*
-			 * Found a match. Remove it from the list and
-			 * respond.
-			 */
-			list_del(pos);
-			spin_unlock(&parahotplug_request_list_lock);
-			req->msg.cmd.device_change_state.state.active = active;
-			if (req->msg.hdr.flags.response_expected)
-				controlvm_respond(
-				       &req->msg.hdr, CONTROLVM_RESP_SUCCESS,
-				       &req->msg.cmd.device_change_state.state);
-			parahotplug_request_destroy(req);
-			return 0;
-		}
+		if (req->id != id)
+			continue;
+		/*
+		 * Found a match. Remove it from the list and
+		 * respond.
+		 */
+		list_del(pos);
+		spin_unlock(&parahotplug_request_list_lock);
+		req->msg.cmd.dev_change_state.state.active = active;
+		if (req->msg.hdr.flags.response_expected)
+			controlvm_respond(&req->msg.hdr,
+					  CONTROLVM_RESP_SUCCESS,
+					  &req->msg.cmd.dev_change_state.state);
+		parahotplug_request_destroy(req);
+		return 0;
 	}
 	spin_unlock(&parahotplug_request_list_lock);
 	return -EINVAL;
@@ -1087,13 +1087,13 @@ static int parahotplug_request_kickoff(struct parahotplug_request *req)
 	sprintf(env_cmd, "VISOR_PARAHOTPLUG=1");
 	sprintf(env_id, "VISOR_PARAHOTPLUG_ID=%d", req->id);
 	sprintf(env_state, "VISOR_PARAHOTPLUG_STATE=%d",
-		cmd->device_change_state.state.active);
+		cmd->dev_change_state.state.active);
 	sprintf(env_bus, "VISOR_PARAHOTPLUG_BUS=%d",
-		cmd->device_change_state.bus_no);
+		cmd->dev_change_state.bus_no);
 	sprintf(env_dev, "VISOR_PARAHOTPLUG_DEVICE=%d",
-		cmd->device_change_state.dev_no >> 3);
+		cmd->dev_change_state.dev_no >> 3);
 	sprintf(env_func, "VISOR_PARAHOTPLUG_FUNCTION=%d",
-		cmd->device_change_state.dev_no & 0x7);
+		cmd->dev_change_state.dev_no & 0x7);
 	return kobject_uevent_env(&chipset_dev->acpi_device->dev.kobj,
 				  KOBJ_CHANGE, envp);
 }
@@ -1115,12 +1115,12 @@ static int parahotplug_process_message(struct controlvm_message *inmsg)
 	 * For enable messages, just respond with success right away, we don't
 	 * need to wait to see if the enable was successful.
 	 */
-	if (inmsg->cmd.device_change_state.state.active) {
+	if (inmsg->cmd.dev_change_state.state.active) {
 		err = parahotplug_request_kickoff(req);
 		if (err)
 			goto err_respond;
 		controlvm_respond(&inmsg->hdr, CONTROLVM_RESP_SUCCESS,
-				  &inmsg->cmd.device_change_state.state);
+				  &inmsg->cmd.dev_change_state.state);
 		parahotplug_request_destroy(req);
 		return 0;
 	}
@@ -1139,7 +1139,7 @@ static int parahotplug_process_message(struct controlvm_message *inmsg)
 
 err_respond:
 	controlvm_respond(&inmsg->hdr, err,
-			  &inmsg->cmd.device_change_state.state);
+			  &inmsg->cmd.dev_change_state.state);
 	return err;
 }
 
@@ -1443,7 +1443,7 @@ static int handle_command(struct controlvm_message inmsg, u64 channel_addr)
 		err = visorbus_device_create(&inmsg);
 		break;
 	case CONTROLVM_DEVICE_CHANGESTATE:
-		if (cmd->device_change_state.flags.phys_device) {
+		if (cmd->dev_change_state.flags.phys_device) {
 			err = parahotplug_process_message(&inmsg);
 		} else {
 			/*
@@ -1525,10 +1525,9 @@ static void parahotplug_process_list(void)
 			continue;
 		list_del(pos);
 		if (req->msg.hdr.flags.response_expected)
-			controlvm_respond(
-				&req->msg.hdr,
-				CONTROLVM_RESP_DEVICE_UDEV_TIMEOUT,
-				&req->msg.cmd.device_change_state.state);
+			controlvm_respond(&req->msg.hdr,
+					  CONTROLVM_RESP_DEVICE_UDEV_TIMEOUT,
+					  &req->msg.cmd.dev_change_state.state);
 		parahotplug_request_destroy(req);
 	}
 	spin_unlock(&parahotplug_request_list_lock);
