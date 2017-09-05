@@ -492,11 +492,10 @@ static int visorbus_create(struct controlvm_message *inmsg)
 		       sizeof(struct controlvm_message_header));
 		bus_info->pending_msg_hdr = pmsg_hdr;
 	}
-	visorchannel =
-		visorchannel_create_guts(cmd->create_bus.channel_addr,
-					 GFP_KERNEL,
-					 &cmd->create_bus.bus_data_type_guid,
-					 false);
+	visorchannel = visorchannel_create(cmd->create_bus.channel_addr,
+					   GFP_KERNEL,
+					   &cmd->create_bus.bus_data_type_guid,
+					   false);
 	if (!visorchannel) {
 		err = -ENOMEM;
 		goto err_free_pending_msg;
@@ -683,11 +682,10 @@ static int visorbus_device_create(struct controlvm_message *inmsg)
 	dev_info->chipset_dev_no = dev_no;
 	guid_copy(&dev_info->inst, &cmd->create_device.dev_inst_guid);
 	dev_info->device.parent = &bus_info->device;
-	visorchannel =
-	       visorchannel_create_guts(cmd->create_device.channel_addr,
-					GFP_KERNEL,
-					&cmd->create_device.data_type_guid,
-					true);
+	visorchannel = visorchannel_create(cmd->create_device.channel_addr,
+					   GFP_KERNEL,
+					   &cmd->create_device.data_type_guid,
+					   true);
 	if (!visorchannel) {
 		dev_err(&chipset_dev->acpi_device->dev,
 			"failed to create visorchannel: %d/%d\n",
@@ -1206,8 +1204,8 @@ static int controlvm_channel_create(struct visorchipset_device *dev)
 	if (err)
 		return err;
 	addr = dev->controlvm_params.address;
-	chan = visorchannel_create_guts(addr, GFP_KERNEL,
-					&visor_controlvm_channel_guid, true);
+	chan = visorchannel_create(addr, GFP_KERNEL,
+				   &visor_controlvm_channel_guid, true);
 	if (!chan)
 		return -ENOMEM;
 	dev->controlvm_channel = chan;
