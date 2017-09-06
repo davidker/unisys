@@ -101,7 +101,6 @@ enum channel_clientstate {
 struct channel_header {
 	u64 signature;
 	u32 legacy_state;
-	/* SrvState, CliStateBoot, and CliStateOS below */
 	u32 header_size;
 	u64 size;
 	u64 features;
