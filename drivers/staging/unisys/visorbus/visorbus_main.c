@@ -139,14 +139,12 @@ static int visorbus_uevent(struct device *xdev, struct kobj_uevent_env *env)
  */
 static int visorbus_match(struct device *xdev, struct device_driver *xdrv)
 {
-	const guid_t *channel_type;
 	int i;
 	struct visor_device *dev;
 	struct visor_driver *drv;
 	struct visorchannel *chan;
 
 	dev = to_visor_device(xdev);
-	channel_type = visorchannel_get_guid(dev->visorchannel);
 	drv = to_visor_driver(xdrv);
 	chan = dev->visorchannel;
 	if (!drv->channel_types)
