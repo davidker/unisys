@@ -54,4 +54,5 @@ int visorchannel_set_clientpartition(struct visorchannel *channel,
 				     u64 partition_handle);
 char *visorchannel_guid_id(const guid_t *guid, char *s);
 void *visorchannel_get_header(struct visorchannel *channel);
+
 #endif
