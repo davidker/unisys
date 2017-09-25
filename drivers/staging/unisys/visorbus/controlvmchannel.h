@@ -177,7 +177,6 @@ struct efi_visor_indication  {
 	u64 clear_nvram:1;
 	u64 clear_cmos:1;
 	u64 boot_to_tool:1;
-	/* Remaining bits are available */
 	u64 reserved:60;
 } __packed;
 
