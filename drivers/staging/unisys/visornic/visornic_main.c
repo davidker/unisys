@@ -437,8 +437,7 @@ static int post_skb(struct uiscmdrsp *cmdrsp, struct visornic_devdata *devdata,
 	cmdrsp->net.type = NET_RCV_POST;
 	cmdrsp->cmdtype = CMD_NET_TYPE;
 	err = visorchannel_signalinsert(devdata->dev->visorchannel,
-					IOCHAN_TO_IOPART,
-					cmdrsp);
+					IOCHAN_TO_IOPART, cmdrsp);
 	if (err) {
 		devdata->chstat.sent_post_failed++;
 		return err;
@@ -467,8 +466,7 @@ static int send_enbdis(struct net_device *netdev, int state,
 	devdata->cmdrsp_rcv->net.type = NET_RCV_ENBDIS;
 	devdata->cmdrsp_rcv->cmdtype = CMD_NET_TYPE;
 	err = visorchannel_signalinsert(devdata->dev->visorchannel,
-					IOCHAN_TO_IOPART,
-					devdata->cmdrsp_rcv);
+					IOCHAN_TO_IOPART, devdata->cmdrsp_rcv);
 	if (err)
 		return err;
 	devdata->chstat.sent_enbdis++;
@@ -661,8 +659,7 @@ static int visornic_enable_with_timeout(struct net_device *netdev,
 	if (err)
 		return err;
 	spin_lock_irqsave(&devdata->priv_lock, flags);
-	while ((timeout == VISORNIC_INFINITE_RSP_WAIT) ||
-	       (wait < timeout)) {
+	while ((timeout == VISORNIC_INFINITE_RSP_WAIT) || (wait < timeout)) {
 		if (devdata->enab_dis_acked)
 			break;
 		if (devdata->server_down || devdata->server_change_state) {
@@ -813,8 +810,7 @@ static netdev_tx_t visornic_xmit(struct sk_buff *skb, struct net_device *netdev)
 	    devdata->server_change_state) {
 		spin_unlock_irqrestore(&devdata->priv_lock, flags);
 		devdata->busy_cnt++;
-		dev_dbg(&netdev->dev,
-			"%s busy - queue stopped\n", __func__);
+		dev_dbg(&netdev->dev, "%s busy - queue stopped\n", __func__);
 		kfree_skb(skb);
 		return NETDEV_TX_OK;
 	}
@@ -832,8 +828,7 @@ static netdev_tx_t visornic_xmit(struct sk_buff *skb, struct net_device *netdev)
 	if (firstfraglen < ETH_HLEN) {
 		spin_unlock_irqrestore(&devdata->priv_lock, flags);
 		devdata->busy_cnt++;
-		dev_err(&netdev->dev,
-			"%s busy - first frag too small (%d)\n",
+		dev_err(&netdev->dev, "%s busy - first frag too small (%d)\n",
 			__func__, firstfraglen);
 		kfree_skb(skb);
 		return NETDEV_TX_OK;
@@ -899,8 +894,7 @@ static netdev_tx_t visornic_xmit(struct sk_buff *skb, struct net_device *netdev)
 	 * beyond eth header
 	 */
 	cmdrsp->net.xmt.num_frags =
-		visor_copy_fragsinfo_from_skb(skb, firstfraglen,
-					      MAX_PHYS_INFO,
+		visor_copy_fragsinfo_from_skb(skb, firstfraglen, MAX_PHYS_INFO,
 					      cmdrsp->net.xmt.frags);
 	if (cmdrsp->net.xmt.num_frags < 0) {
 		spin_unlock_irqrestore(&devdata->priv_lock, flags);
@@ -933,8 +927,7 @@ static netdev_tx_t visornic_xmit(struct sk_buff *skb, struct net_device *netdev)
 		/* extra NET_XMITs queued over to IOVM - need to wait */
 		/* stop queue - call netif_wake_queue() after lower threshold */
 		netif_stop_queue(netdev);
-		dev_dbg(&netdev->dev,
-			"%s busy - invoking iovm flow control\n",
+		dev_dbg(&netdev->dev, "%s busy - invoking iovm flow control\n",
 			__func__);
 		devdata->flow_control_upper_hits++;
 	}
@@ -983,8 +976,7 @@ static void visornic_set_multi(struct net_device *netdev)
 
 	if (devdata->old_flags == netdev->flags)
 		return;
-	if ((netdev->flags & IFF_PROMISC) ==
-	    (devdata->old_flags & IFF_PROMISC))
+	if ((netdev->flags & IFF_PROMISC) == (devdata->old_flags & IFF_PROMISC))
 		goto out_save_flags;
 	cmdrsp = kmalloc(SIZEOF_CMDRSP, GFP_ATOMIC);
 	if (!cmdrsp)
@@ -992,11 +984,9 @@ static void visornic_set_multi(struct net_device *netdev)
 	cmdrsp->cmdtype = CMD_NET_TYPE;
 	cmdrsp->net.type = NET_RCV_PROMISC;
 	cmdrsp->net.enbdis.context = netdev;
-	cmdrsp->net.enbdis.enable =
-		netdev->flags & IFF_PROMISC;
+	cmdrsp->net.enbdis.enable = netdev->flags & IFF_PROMISC;
 	err = visorchannel_signalinsert(devdata->dev->visorchannel,
-					IOCHAN_TO_IOPART,
-					cmdrsp);
+					IOCHAN_TO_IOPART, cmdrsp);
 	kfree(cmdrsp);
 	if (err)
 		return;
@@ -1027,8 +1017,7 @@ static void visornic_xmit_timeout(struct net_device *netdev, unsigned int txqueu
 	/* Ensure that a ServerDown message hasn't been received */
 	if (!devdata->enabled ||
 	    (devdata->server_down && !devdata->server_change_state)) {
-		dev_dbg(&netdev->dev, "%s no processing\n",
-			__func__);
+		dev_dbg(&netdev->dev, "%s no processing\n", __func__);
 		spin_unlock_irqrestore(&devdata->priv_lock, flags);
 		return;
 	}
@@ -1360,9 +1349,7 @@ static ssize_t info_debugfs_read(struct file *file, char __user *buf,
 		devdata = netdev_priv(dev);
 		str_pos += scnprintf(vbuf + str_pos, len - str_pos,
 				     "netdev = %s (0x%p), MAC Addr %pM\n",
-				     dev->name,
-				     dev,
-				     dev->dev_addr);
+				     dev->name, dev, dev->dev_addr);
 		str_pos += scnprintf(vbuf + str_pos, len - str_pos,
 				     "VisorNic Dev Info = 0x%p\n", devdata);
 		str_pos += scnprintf(vbuf + str_pos, len - str_pos,
@@ -1538,8 +1525,7 @@ static void drain_resp_queue(struct uiscmdrsp *cmdrsp,
 			     struct visornic_devdata *devdata)
 {
 	while (!visorchannel_signalremove(devdata->dev->visorchannel,
-					  IOCHAN_FROM_IOPART,
-					  cmdrsp))
+					  IOCHAN_FROM_IOPART, cmdrsp))
 		;
 }
 
@@ -1565,8 +1551,7 @@ static void service_resp_queue(struct uiscmdrsp *cmdrsp,
 		 */
 		/* queue empty */
 		if (visorchannel_signalremove(devdata->dev->visorchannel,
-					      IOCHAN_FROM_IOPART,
-					      cmdrsp))
+					      IOCHAN_FROM_IOPART, cmdrsp))
 			break;
 		switch (cmdrsp->net.type) {
 		case NET_RCV:
@@ -1670,9 +1655,8 @@ static void poll_for_irq(struct timer_list *t)
 	struct visornic_devdata *devdata = from_timer(devdata, t,
 						      irq_poll_timer);
 
-	if (!visorchannel_signalempty(
-				   devdata->dev->visorchannel,
-				   IOCHAN_FROM_IOPART))
+	if (!visorchannel_signalempty(devdata->dev->visorchannel,
+				      IOCHAN_FROM_IOPART))
 		napi_schedule(&devdata->napi);
 	atomic_set(&devdata->interrupt_rcvd, 0);
 	mod_timer(&devdata->irq_poll_timer, msecs_to_jiffies(2));
@@ -1696,8 +1680,7 @@ static int visornic_probe(struct visor_device *dev)
 
 	netdev = alloc_etherdev(sizeof(struct visornic_devdata));
 	if (!netdev) {
-		dev_err(&dev->device,
-			"%s alloc_etherdev failed\n", __func__);
+		dev_err(&dev->device, "%s alloc_etherdev failed\n", __func__);
 		return -ENOMEM;
 	}
 	netdev->netdev_ops = &visornic_dev_ops;
@@ -1710,14 +1693,14 @@ static int visornic_probe(struct visor_device *dev)
 				    ETH_ALEN);
 	if (err < 0) {
 		dev_err(&dev->device,
-			"%s failed to get mac addr from chan (%d)\n",
-			__func__, err);
+			"%s failed to get mac addr from chan (%d)\n", __func__,
+			err);
 		goto cleanup_netdev;
 	}
 	devdata = devdata_initialize(netdev_priv(netdev), dev);
 	if (!devdata) {
-		dev_err(&dev->device,
-			"%s devdata_initialize failed\n", __func__);
+		dev_err(&dev->device, "%s devdata_initialize failed\n",
+			__func__);
 		err = -ENOMEM;
 		goto cleanup_netdev;
 	}
@@ -1753,11 +1736,11 @@ static int visornic_probe(struct visor_device *dev)
 	devdata->max_outstanding_net_xmits =
 		max_t(unsigned long, 3, ((devdata->num_rcv_bufs / 3) - 2));
 	devdata->upper_threshold_net_xmits =
-		max_t(unsigned long,
-		      2, (devdata->max_outstanding_net_xmits - 1));
+		max_t(unsigned long, 2,
+		      (devdata->max_outstanding_net_xmits - 1));
 	devdata->lower_threshold_net_xmits =
-		max_t(unsigned long,
-		      1, (devdata->max_outstanding_net_xmits / 2));
+		max_t(unsigned long, 1,
+		      (devdata->max_outstanding_net_xmits / 2));
 	skb_queue_head_init(&devdata->xmitbufhead);
 	/* create a cmdrsp we can use to post and unpost rcv buffers */
 	devdata->cmdrsp_rcv = kmalloc(SIZEOF_CMDRSP, GFP_KERNEL);
@@ -1777,8 +1760,7 @@ static int visornic_probe(struct visor_device *dev)
 	channel_offset = offsetof(struct visor_io_channel, vnic.mtu);
 	err = visorbus_read_channel(dev, channel_offset, &netdev->mtu, 4);
 	if (err) {
-		dev_err(&dev->device,
-			"%s failed to get mtu from chan (%d)\n",
+		dev_err(&dev->device, "%s failed to get mtu from chan (%d)\n",
 			__func__, err);
 		goto cleanup_xmit_cmdrsp;
 	}
@@ -1814,22 +1796,21 @@ static int visornic_probe(struct visor_device *dev)
 	visorbus_enable_channel_interrupts(dev);
 	err = register_netdev(netdev);
 	if (err) {
-		dev_err(&dev->device,
-			"%s register_netdev failed (%d)\n", __func__, err);
+		dev_err(&dev->device, "%s register_netdev failed (%d)\n",
+			__func__, err);
 		goto cleanup_napi_add;
 	}
 	/* create debug/sysfs directories */
 	devdata->eth_debugfs_dir = debugfs_create_dir(netdev->name,
 						      visornic_debugfs_dir);
 	if (!devdata->eth_debugfs_dir) {
-		dev_err(&dev->device,
-			"%s debugfs_create_dir %s failed\n",
+		dev_err(&dev->device, "%s debugfs_create_dir %s failed\n",
 			__func__, netdev->name);
 		err = -ENOMEM;
 		goto cleanup_register_netdev;
 	}
-	dev_info(&dev->device, "%s success netdev=%s\n",
-		 __func__, netdev->name);
+	dev_info(&dev->device, "%s success netdev=%s\n", __func__,
+		 netdev->name);
 	return 0;
 
 cleanup_register_netdev:
