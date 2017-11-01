@@ -11,11 +11,11 @@
 
 #include <linux/debugfs.h>
 #include <linux/etherdevice.h>
+#include <linux/kthread.h>
 #include <linux/module.h>
 #include <linux/netdevice.h>
-#include <linux/kthread.h>
-#include <linux/skbuff.h>
 #include <linux/rtnetlink.h>
+#include <linux/skbuff.h>
 #include <linux/visorbus.h>
 
 #include "iochannel.h"
