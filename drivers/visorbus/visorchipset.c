@@ -15,8 +15,8 @@
 
 #include <linux/acpi.h>
 #include <linux/crash_dump.h>
+#include <linux/visorbus/visorbus.h>
 
-#include "visorbus.h"
 #include "visorbus_private.h"
 
 /* {72120008-4AAB-11DC-8530-444553544200} */
