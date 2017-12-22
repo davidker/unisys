@@ -92,7 +92,7 @@ struct spar_input_chan_prot {
 	};
 } __packed;
 
-enum visorinput_device_type {
+enum visorinput_dev_type {
 	visorinput_keyboard,
 	visorinput_mouse,
 };
@@ -415,15 +415,14 @@ static unsigned int read_input_channel_uint(struct visor_device *dev,
 	return v;
 }
 
-static struct visorinput_devdata *devdata_create(
-					struct visor_device *dev,
-					enum visorinput_device_type devtype)
+static struct visorinput_devdata *devdata_create(struct visor_device *dev,
+						 enum visorinput_dev_type dtype)
 {
 	struct visorinput_devdata *devdata = NULL;
 	unsigned int extra_bytes = 0;
 	unsigned int xres, yres;
 
-	if (devtype == visorinput_keyboard)
+	if (dtype == visorinput_keyboard)
 		/* allocate room for devdata->keycode_table, filled in below */
 		extra_bytes = KEYCODE_TABLE_BYTES * 2;
 	devdata = kzalloc(sizeof(*devdata) + extra_bytes, GFP_KERNEL);
@@ -446,7 +445,7 @@ static struct visorinput_devdata *devdata_create(
 	 * so we need to create whatever input nodes are necessary to
 	 * deliver our inputs to the guest OS.
 	 */
-	switch (devtype) {
+	switch (dtype) {
 	case visorinput_keyboard:
 		devdata->keycode_table_bytes = extra_bytes;
 		memcpy(devdata->keycode_table, visorkbd_keycode,
@@ -511,17 +510,17 @@ err_kfree_devdata:
 static int visorinput_probe(struct visor_device *dev)
 {
 	const guid_t *guid;
-	enum visorinput_device_type devtype;
+	enum visorinput_dev_type dtype;
 
 	guid = visorchannel_get_guid(dev->visorchannel);
 	if (guid_equal(guid, &visor_mouse_channel_guid))
-		devtype = visorinput_mouse;
+		dtype = visorinput_mouse;
 	else if (guid_equal(guid, &visor_keyboard_channel_guid))
-		devtype = visorinput_keyboard;
+		dtype = visorinput_keyboard;
 	else
 		return -ENODEV;
 	visorbus_disable_channel_interrupts(dev);
-	if (!devdata_create(dev, devtype))
+	if (!devdata_create(dev, dtype))
 		return -ENOMEM;
 	return 0;
 }
