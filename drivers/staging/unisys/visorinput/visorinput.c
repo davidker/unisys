@@ -18,7 +18,7 @@
 #include <linux/uuid.h>
 #include <linux/visorbus.h>
 
-#include "ultrainputreport.h"
+#include "visorinput.h"
 
 /* Keyboard channel {c73416d0-b0b8-44af-b304-9d2ae99f1b3d} */
 #define VISOR_KEYBOARD_CHANNEL_GUID \

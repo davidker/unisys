@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#ifndef __SPAR_ULTRAINPUTREPORT_H__
-#define __SPAR_ULTRAINPUTREPORT_H__
+#ifndef __SPAR_VISORINPUT_H__
+#define __SPAR_VISORINPUT_H__
 
 #include <linux/types.h>
 
