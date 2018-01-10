@@ -92,20 +92,6 @@ struct spar_input_channel_protocol {
 	};
 } __packed;
 
-static unsigned int read_input_channel_uint(struct visor_device *dev,
-					    unsigned int offset,
-					    unsigned int size)
-{
-	unsigned int v = 0;
-
-	if (visorbus_read_channel(dev, offset, &v, size)) {
-		dev_warn(&dev->device,
-			 "failed to read channel int at offset %u\n", offset);
-		return 0;
-	}
-	return v;
-}
-
 enum visorinput_dev_type {
 	visorinput_keyboard,
 	visorinput_mouse,
@@ -408,6 +394,20 @@ static struct input_dev *setup_client_mouse(void *devdata, unsigned int xres,
 	input_set_capability(visorinput_dev, EV_REL, REL_WHEEL);
 
 	return visorinput_dev;
+}
+
+static unsigned int read_input_channel_uint(struct visor_device *dev,
+					    unsigned int offset,
+					    unsigned int size)
+{
+	unsigned int v = 0;
+
+	if (visorbus_read_channel(dev, offset, &v, size)) {
+		dev_warn(&dev->device,
+			 "failed to read channel int at offset %u\n", offset);
+		return 0;
+	}
+	return v;
 }
 
 static struct visorinput_devdata *devdata_create(struct visor_device *dev,
