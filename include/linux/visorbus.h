@@ -222,9 +222,9 @@ struct visorchipset_state {
  *				hypervisor requests.
  * @vbus_hdr_info:		A pointer to header info. Private use by bus
  *				driver.
- * @partition_guid:		Indicates client partion id. This should be the
- *				same across all visor_devices in the current
- *				guest. Private use by bus driver only.
+ * @partition_guid:		Indicates client partition id. This should be
+ *				the same across all visor_devices in the
+ *				current guest. Private use by bus driver only.
  */
 struct visor_device {
 	struct visorchannel *visorchannel;
