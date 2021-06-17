@@ -836,4 +836,20 @@ struct mhi_device_id {
 	kernel_ulong_t driver_data;
 };
 
+/*
+ * struct visorbus_device_id -  Unisys visorbus device identifier
+ * @guid: GUID of the visorbus device
+ * @name: Name of the visorbus device
+ * @min_bytes: Minimum bytes  of controlvm channel
+ * @version: Version number of controlvm channel 
+ * @reserved: Reserved field
+ */
+struct visorbus_device_id {
+        const uuid_le guid;
+        const char *name;
+        __u32 min_bytes;
+        __u32 version;
+        __u32 reserved;
+};
+
 #endif /* LINUX_MOD_DEVICETABLE_H */

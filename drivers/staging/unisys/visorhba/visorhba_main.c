@@ -17,6 +17,8 @@
 
 #include "iochannel.h"
 
+#define VERSION "2.21.6.10"  /* visorhba driver version */
+
 /* The Send and Receive Buffers of the IO Queue may both be full */
 
 #define IOS_ERROR_THRESHOLD  1000
@@ -26,7 +28,7 @@
 static struct dentry *visorhba_debugfs_dir;
 
 /* GUIDS for HBA channel type supported by this driver */
-static struct visor_channeltype_descriptor visorhba_channel_types[] = {
+static struct visorbus_device_id visorhba_channel_types[] = {
 	/* Note that the only channel type we expect to be reported by the
 	 * bus driver is the VISOR_VHBA channel.
 	 */
@@ -1167,6 +1169,7 @@ static void visorhba_remove(struct visor_device *dev)
  */
 static struct visor_driver visorhba_driver = {
 	.name = "visorhba",
+	.version = VERSION,
 	.owner = THIS_MODULE,
 	.channel_types = visorhba_channel_types,
 	.probe = visorhba_probe,
@@ -1221,3 +1224,4 @@ module_exit(visorhba_exit);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par HBA driver for virtual SCSI host busses");
+MODULE_VERSION(VERSION);

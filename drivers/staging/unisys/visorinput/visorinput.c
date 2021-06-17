@@ -18,6 +18,8 @@
 #include <linux/uuid.h>
 #include <linux/visorbus.h>
 
+#define VERSION "2.21.6.10"  /* visorinput driver version */
+
 /* These defines identify mouse and keyboard activity which is specified by the
  * firmware to the host using the cmsimpleinput protocol.  @ingroup coretypes
  */
@@ -757,7 +759,7 @@ out:
 }
 
 /* GUIDS for all channel types supported by this driver. */
-static struct visor_channeltype_descriptor visorinput_channel_types[] = {
+static struct visorbus_device_id visorinput_channel_types[] = {
 	{ VISOR_KEYBOARD_CHANNEL_GUID, "keyboard",
 	  sizeof(struct channel_header), 0 },
 	{ VISOR_MOUSE_CHANNEL_GUID, "mouse", sizeof(struct channel_header), 0 },
@@ -766,6 +768,7 @@ static struct visor_channeltype_descriptor visorinput_channel_types[] = {
 
 static struct visor_driver visorinput_driver = {
 	.name = "visorinput",
+	.version = VERSION,
 	.owner = THIS_MODULE,
 	.channel_types = visorinput_channel_types,
 	.probe = visorinput_probe,
@@ -783,6 +786,6 @@ MODULE_DEVICE_TABLE(visorbus, visorinput_channel_types);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par human input driver for virtual keyboard/mouse");
-
+MODULE_VERSION(VERSION);
 MODULE_ALIAS("visorbus:" VISOR_MOUSE_CHANNEL_GUID_STR);
 MODULE_ALIAS("visorbus:" VISOR_KEYBOARD_CHANNEL_GUID_STR);

@@ -20,6 +20,8 @@
 
 #include "iochannel.h"
 
+#define VERSION "2.21.6.10"  /* visornic driver version */
+
 #define VISORNIC_INFINITE_RSP_WAIT 0
 
 /* MAX_BUF = 64 lines x 32 MAXVNIC x 80 characters
@@ -36,7 +38,7 @@
 #define VISOR_VNIC_CHANNEL_GUID_STR \
 	"8cd5994d-c58e-11da-95a9-00e08161165f"
 
-static struct visor_channeltype_descriptor visornic_channel_types[] = {
+static struct visorbus_device_id visornic_channel_types[] = {
 	/* Note that the only channel type we expect to be reported by the
 	 * bus driver is the VISOR_VNIC channel.
 	 */
@@ -2107,6 +2109,7 @@ static int visornic_resume(struct visor_device *dev,
  */
 static struct visor_driver visornic_driver = {
 	.name = "visornic",
+        .version = VERSION,
 	.owner = THIS_MODULE,
 	.channel_types = visornic_channel_types,
 	.probe = visornic_probe,
@@ -2157,3 +2160,4 @@ module_exit(visornic_cleanup);
 MODULE_AUTHOR("Unisys");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("s-Par NIC driver for virtual network devices");
+MODULE_VERSION(VERSION);
